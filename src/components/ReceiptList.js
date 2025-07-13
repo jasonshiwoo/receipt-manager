@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, writeBatch, getDocs } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '../contexts/AuthContext';
 import { db, functions } from '../firebase';
@@ -17,6 +17,10 @@ export default function ReceiptList() {
   const [categories, setCategories] = useState([]);
   const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
   const [newCategoryValue, setNewCategoryValue] = useState('');
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [editCategoryValue, setEditCategoryValue] = useState('');
+  const [updatingCategories, setUpdatingCategories] = useState(false);
 
   useEffect(() => {
     if (!currentUser) {
@@ -272,6 +276,119 @@ export default function ReceiptList() {
     setNewCategoryValue('');
   };
 
+  // Category Management Functions
+  const handleEditCategory = (category) => {
+    setEditingCategory(category);
+    setEditCategoryValue(category);
+  };
+
+  const handleCancelEditCategory = () => {
+    setEditingCategory(null);
+    setEditCategoryValue('');
+  };
+
+  const handleSaveEditCategory = async () => {
+    if (!editCategoryValue.trim() || editCategoryValue.trim() === editingCategory) {
+      handleCancelEditCategory();
+      return;
+    }
+
+    const newCategoryName = editCategoryValue.trim();
+    
+    // Check if new category name already exists
+    if (categories.includes(newCategoryName)) {
+      alert('A category with this name already exists!');
+      return;
+    }
+
+    setUpdatingCategories(true);
+    
+    try {
+      // Get all receipts with the old category
+      const receiptsQuery = query(
+        collection(db, 'receipts'),
+        where('userId', '==', currentUser.uid),
+        where('category', '==', editingCategory)
+      );
+      
+      const receiptsSnapshot = await getDocs(receiptsQuery);
+      
+      if (!receiptsSnapshot.empty) {
+        // Update all receipts with the new category name
+        const batch = writeBatch(db);
+        
+        receiptsSnapshot.docs.forEach((receiptDoc) => {
+          batch.update(receiptDoc.ref, {
+            category: newCategoryName,
+            updatedAt: new Date()
+          });
+        });
+        
+        await batch.commit();
+      }
+      
+      // Update local categories list
+      setCategories(prev => 
+        prev.map(cat => cat === editingCategory ? newCategoryName : cat).sort()
+      );
+      
+      handleCancelEditCategory();
+      alert(`Category renamed from "${editingCategory}" to "${newCategoryName}"`);
+      
+    } catch (error) {
+      console.error('Error updating category:', error);
+      alert('Failed to update category. Please try again.');
+    } finally {
+      setUpdatingCategories(false);
+    }
+  };
+
+  const handleDeleteCategory = async (categoryToDelete) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete the category "${categoryToDelete}"?\n\nThis will remove the category from all receipts that use it. This action cannot be undone.`
+    );
+    
+    if (!confirmDelete) return;
+    
+    setUpdatingCategories(true);
+    
+    try {
+      // Get all receipts with this category
+      const receiptsQuery = query(
+        collection(db, 'receipts'),
+        where('userId', '==', currentUser.uid),
+        where('category', '==', categoryToDelete)
+      );
+      
+      const receiptsSnapshot = await getDocs(receiptsQuery);
+      
+      if (!receiptsSnapshot.empty) {
+        // Remove category from all receipts
+        const batch = writeBatch(db);
+        
+        receiptsSnapshot.docs.forEach((receiptDoc) => {
+          batch.update(receiptDoc.ref, {
+            category: '',
+            updatedAt: new Date()
+          });
+        });
+        
+        await batch.commit();
+      }
+      
+      // Update local categories list
+      setCategories(prev => prev.filter(cat => cat !== categoryToDelete));
+      
+      alert(`Category "${categoryToDelete}" has been deleted.`);
+      
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      alert('Failed to delete category. Please try again.');
+    } finally {
+      setUpdatingCategories(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="receipt-list">
@@ -300,13 +417,26 @@ export default function ReceiptList() {
   return (
     <div className="receipt-list">
       <div className="receipt-list-header">
-        <h3>📄 Your Receipts</h3>
-        <p>
-          {receipts.length === 0 
-            ? 'No receipts uploaded yet. Use the camera above to get started!' 
-            : `${receipts.length} receipt${receipts.length !== 1 ? 's' : ''} found`
-          }
-        </p>
+        <div className="header-content">
+          <div className="header-text">
+            <h3>📄 Your Receipts</h3>
+            <p>
+              {receipts.length === 0 
+                ? 'No receipts uploaded yet. Use the camera above to get started!' 
+                : `${receipts.length} receipt${receipts.length !== 1 ? 's' : ''} found`
+              }
+            </p>
+          </div>
+          {categories.length > 0 && (
+            <button 
+              className="edit-categories-btn"
+              onClick={() => setShowCategoryManager(true)}
+              title="Manage your categories"
+            >
+              🏷️ Edit Categories
+            </button>
+          )}
+        </div>
       </div>
 
       {receipts.length > 0 && (
@@ -542,6 +672,110 @@ export default function ReceiptList() {
                 ) : (
                   'Save Changes'
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Category Management Modal */}
+      {showCategoryManager && (
+        <div className="modal-overlay" onClick={() => setShowCategoryManager(false)}>
+          <div className="category-manager-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>🏷️ Manage Categories</h3>
+              <button className="close-btn" onClick={() => setShowCategoryManager(false)}>×</button>
+            </div>
+            
+            <div className="modal-body">
+              {categories.length === 0 ? (
+                <p className="no-categories">No categories found. Create some categories by editing your receipts!</p>
+              ) : (
+                <div className="categories-list">
+                  <p className="categories-info">
+                    You have {categories.length} categor{categories.length !== 1 ? 'ies' : 'y'}. 
+                    Click to rename or delete them.
+                  </p>
+                  
+                  {categories.map((category) => (
+                    <div key={category} className="category-item">
+                      {editingCategory === category ? (
+                        <div className="category-edit">
+                          <input
+                            type="text"
+                            value={editCategoryValue}
+                            onChange={(e) => setEditCategoryValue(e.target.value)}
+                            onKeyPress={(e) => {
+                              if (e.key === 'Enter') {
+                                handleSaveEditCategory();
+                              } else if (e.key === 'Escape') {
+                                handleCancelEditCategory();
+                              }
+                            }}
+                            className="category-edit-input"
+                            autoFocus
+                            disabled={updatingCategories}
+                          />
+                          <div className="category-edit-buttons">
+                            <button 
+                              className="save-category-btn"
+                              onClick={handleSaveEditCategory}
+                              disabled={updatingCategories}
+                            >
+                              {updatingCategories ? (
+                                <>
+                                  <span className="spinner-small"></span>
+                                  Saving...
+                                </>
+                              ) : (
+                                '✓ Save'
+                              )}
+                            </button>
+                            <button 
+                              className="cancel-category-btn"
+                              onClick={handleCancelEditCategory}
+                              disabled={updatingCategories}
+                            >
+                              ✕ Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="category-display">
+                          <span className="category-name">🏷️ {category}</span>
+                          <div className="category-actions">
+                            <button 
+                              className="edit-btn"
+                              onClick={() => handleEditCategory(category)}
+                              disabled={updatingCategories}
+                              title="Rename category"
+                            >
+                              ✏️ Edit
+                            </button>
+                            <button 
+                              className="delete-btn"
+                              onClick={() => handleDeleteCategory(category)}
+                              disabled={updatingCategories}
+                              title="Delete category"
+                            >
+                              🗑️ Delete
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            <div className="modal-footer">
+              <button 
+                className="close-modal-btn" 
+                onClick={() => setShowCategoryManager(false)}
+                disabled={updatingCategories}
+              >
+                Close
               </button>
             </div>
           </div>
