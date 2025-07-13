@@ -1,72 +1,188 @@
-# Receipt Manager
+# 📄 Receipt Manager
 
-A modern web application for managing and organizing receipts, built with React and Firebase.
+A comprehensive web application for managing receipts, expenses, and business trips with AI-powered OCR processing.
 
-## Features
+## 🌟 Features
 
-- 🔐 **Firebase Authentication** - Secure email/password login
-- 📄 **Receipt Storage** - Upload and store receipt images
-- 🔍 **Search & Filter** - Find receipts quickly
-- 📊 **Analytics** - Track spending patterns
-- 📱 **Responsive Design** - Works on all devices
-- 🔒 **Data Isolation** - Each user's data is completely isolated
+### 📸 **Receipt Processing**
+- Upload receipt images via camera or file selection
+- AI-powered OCR extraction using Google Cloud Vision API
+- Automatic extraction of total, date, location, and merchant info
+- Manual editing and correction of extracted data
 
-## Setup Instructions
+### ✏️ **Receipt Management**
+- View all receipts in a responsive grid layout
+- Click-to-edit functionality for any receipt
+- Real-time updates to receipt information
+- Delete receipts with confirmation
 
-### 1. Firebase Project Setup
+### 🧳 **Trip Management**
+- Automatic trip detection based on location differences
+- Manual trip creation and management
+- Assign receipts to specific trips
+- Track trip expenses and totals
+- View unassigned receipts
 
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Create a new project called "Receipt Manager"
-3. Enable the following services:
-   - **Authentication** (Email/Password provider)
-   - **Firestore Database**
-   - **Storage**
-   - **Hosting**
+### 🔐 **Security & Authentication**
+- Firebase Authentication with email/password
+- Complete user data isolation
+- Secure access code system ("jasonhan")
+- Server-side OCR processing for security
 
-### 2. Get Firebase Configuration
+### 📱 **Modern UI/UX**
+- Responsive design for mobile and desktop
+- Modern card-based interface
+- Loading states and error handling
+- Smooth animations and transitions
 
-1. In your Firebase project, go to Project Settings
-2. Scroll down to "Your apps" and click "Add app" → Web
-3. Register your app with nickname "Receipt Manager"
-4. Copy the Firebase configuration object
-5. Replace the placeholder values in `src/firebase.js` with your actual config
+## 🛠 Tech Stack
 
-### 3. Deploy Security Rules
+- **Frontend**: React with Hooks, Modern CSS
+- **Backend**: Firebase (Auth, Firestore, Storage, Functions, Hosting)
+- **OCR**: Google Cloud Vision API
+- **Authentication**: react-firebase-hooks
+- **Deployment**: Firebase Hosting
 
-```bash
-# Login to Firebase (if not already logged in)
-npx firebase login
+## 🚀 Live Demo
 
-# Initialize Firebase in your project
-npx firebase init
+Visit the live app: **https://receipt-manager-2c61b.web.app**
 
-# Deploy Firestore security rules
-npx firebase deploy --only firestore:rules
+Use access code: `jasonhan`
 
-# Deploy Storage security rules
-npx firebase deploy --only storage
+## 📁 Project Structure
+
+```
+receipt-manager/
+├── src/
+│   ├── components/
+│   │   ├── Dashboard.js          # Main dashboard with tabs
+│   │   ├── ReceiptUpload.js      # Receipt upload interface
+│   │   ├── ReceiptList.js        # Receipt display and editing
+│   │   ├── ReceiptProcessor.js   # OCR processing component
+│   │   ├── TripManager.js        # Trip management interface
+│   │   ├── ReceiptConfirmationForm.js # OCR data confirmation
+│   │   └── ErrorBoundary.js      # Error handling
+│   ├── contexts/
+│   │   └── AuthContext.js        # Authentication context
+│   └── firebase.js               # Firebase configuration
+├── functions/
+│   └── index.js                  # Firebase Cloud Functions
+├── public/
+└── firebase.json                 # Firebase configuration
 ```
 
-### 4. Install Dependencies & Run
+## 🔧 Setup Instructions
+
+### 1. Clone the Repository
 
 ```bash
-# Install dependencies
+git clone https://github.com/jasonshiwoo/receipt-manager.git
+cd receipt-manager
+```
+
+### 2. Install Dependencies
+
+```bash
 npm install
-
-# Start development server
-npm start
+cd functions && npm install && cd ..
 ```
 
-The app will open at [http://localhost:3000](http://localhost:3000)
+### 3. Firebase Setup
 
-### 5. Deploy to Firebase Hosting
+1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+2. Enable Authentication, Firestore, Storage, Functions, and Hosting
+3. Copy your Firebase config to `src/firebase.js`
+
+### 4. Google Cloud Vision Setup
+
+1. Enable Google Cloud Vision API in your Firebase project
+2. Set up service account credentials
+3. Deploy Firebase Functions with Vision API access
+
+### 5. Deploy
 
 ```bash
 # Build the app
 npm run build
 
-# Deploy to Firebase Hosting
-npx firebase deploy --only hosting
+# Deploy to Firebase
+firebase deploy
+```
+
+## 🎯 Usage
+
+1. **Login**: Use access code "jasonhan" to create account
+2. **Upload Receipts**: Take photos or upload receipt images
+3. **Review OCR**: Confirm and edit extracted information
+4. **Manage Trips**: Create trips and assign receipts
+5. **Edit Receipts**: Click any receipt to edit details
+6. **Track Expenses**: View totals and analytics
+
+## 🔒 Security Features
+
+- **User Isolation**: Each user's data is completely isolated
+- **Firestore Rules**: Server-side security rules prevent unauthorized access
+- **Storage Rules**: Receipt images are user-specific
+- **Server-side OCR**: Sensitive processing happens on secure servers
+
+## 🌐 Firebase Services Used
+
+- **Authentication**: Email/password with access code
+- **Firestore**: Real-time database for receipts and trips
+- **Storage**: Secure image storage
+- **Functions**: Server-side OCR processing
+- **Hosting**: Static web hosting
+
+## 📱 Mobile Support
+
+- Responsive design works on all screen sizes
+- Camera integration for mobile receipt capture
+- Touch-friendly interface
+- Progressive Web App capabilities
+
+## 🐛 Error Handling
+
+- Comprehensive error boundaries
+- Loading states for all operations
+- Graceful fallbacks for failed operations
+- User-friendly error messages
+
+## 🔄 Real-time Updates
+
+- Live receipt list updates
+- Real-time trip expense calculations
+- Instant UI updates after edits
+- Synchronized data across devices
+
+## 📊 Analytics Ready
+
+- Trip expense tracking
+- Receipt categorization
+- Date-based filtering
+- Export capabilities (future feature)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🆘 Support
+
+For issues or questions:
+1. Check the Firebase Console for errors
+2. Review the browser console for client-side issues
+3. Check Firebase Functions logs for server-side issues
+
+---
+
+Built with ❤️ using React and Firebase
 ```
 
 ## Project Structure
@@ -138,3 +254,6 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+=======
+# receipt-manager
+>>>>>>> 1c04fa932fab45e06eccd61326dfbd45d81d1686
