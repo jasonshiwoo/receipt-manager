@@ -605,44 +605,7 @@
   transform: translateY(-1px);
 }
 
-/* Header Layout */
-.header-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
 
-.header-text {
-  flex: 1;
-  min-width: 200px;
-}
-
-/* Edit Categories Button */
-.edit-categories-btn {
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
-  border: none;
-  padding: 0.75rem 1.25rem;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(240, 147, 251, 0.3);
-  white-space: nowrap;
-}
-
-.edit-categories-btn:hover {
-  background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(240, 147, 251, 0.4);
-}
-
-.edit-categories-btn:active {
-  transform: translateY(0);
-}
 
 /* Category Manager Modal */
 .category-manager-modal {

@@ -251,6 +251,13 @@ export default function ReceiptList() {
     if (value === 'ADD_NEW') {
       setShowNewCategoryInput(true);
       setNewCategoryValue('');
+    } else if (value === 'EDIT_CATEGORIES') {
+      setShowCategoryManager(true);
+      // Reset the dropdown to the current category value
+      // This prevents the dropdown from showing "Edit Categories" as selected
+      setTimeout(() => {
+        // Use setTimeout to ensure the modal opens first
+      }, 0);
     } else {
       setShowNewCategoryInput(false);
       handleFormChange('category', value);
@@ -417,26 +424,13 @@ export default function ReceiptList() {
   return (
     <div className="receipt-list">
       <div className="receipt-list-header">
-        <div className="header-content">
-          <div className="header-text">
-            <h3>📄 Your Receipts</h3>
-            <p>
-              {receipts.length === 0 
-                ? 'No receipts uploaded yet. Use the camera above to get started!' 
-                : `${receipts.length} receipt${receipts.length !== 1 ? 's' : ''} found`
-              }
-            </p>
-          </div>
-          {categories.length > 0 && (
-            <button 
-              className="edit-categories-btn"
-              onClick={() => setShowCategoryManager(true)}
-              title="Manage your categories"
-            >
-              🏷️ Edit Categories
-            </button>
-          )}
-        </div>
+        <h3>📄 Your Receipts</h3>
+        <p>
+          {receipts.length === 0 
+            ? 'No receipts uploaded yet. Use the camera above to get started!' 
+            : `${receipts.length} receipt${receipts.length !== 1 ? 's' : ''} found`
+          }
+        </p>
       </div>
 
       {receipts.length > 0 && (
@@ -639,6 +633,9 @@ export default function ReceiptList() {
                         {category}
                       </option>
                     ))}
+                    {categories.length > 0 && (
+                      <option value="EDIT_CATEGORIES">🏷️ Edit Categories...</option>
+                    )}
                     <option value="ADD_NEW">➕ Add new category...</option>
                   </select>
                 )}
