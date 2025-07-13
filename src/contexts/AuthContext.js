@@ -30,7 +30,9 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
+    console.log('AuthProvider: Setting up auth state listener');
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      console.log('AuthProvider: Auth state changed, user exists:', !!user);
       setCurrentUser(user);
       setLoading(false);
     });

@@ -121,7 +121,10 @@ const TripManager = () => {
 
   const getTripTotal = (trip) => {
     const tripReceipts = getReceiptsForTrip(trip);
-    return tripReceipts.reduce((total, receipt) => total + (receipt.total || 0), 0);
+    return tripReceipts.reduce((total, receipt) => {
+      const receiptTotal = typeof receipt.total === 'number' ? receipt.total : 0;
+      return total + receiptTotal;
+    }, 0);
   };
 
   if (!user) {
@@ -277,7 +280,7 @@ const TripManager = () => {
                     </div>
                     <div className="stat">
                       <span className="stat-label">Total:</span>
-                      <span className="stat-value">${tripTotal.toFixed(2)}</span>
+                      <span className="stat-value">${typeof tripTotal === 'number' ? tripTotal.toFixed(2) : '0.00'}</span>
                     </div>
                   </div>
                   
@@ -291,7 +294,7 @@ const TripManager = () => {
                               {new Date(receipt.date || receipt.createdAt).toLocaleDateString()}
                             </span>
                             <span className="receipt-amount">
-                              ${(receipt.total || 0).toFixed(2)}
+                              ${typeof receipt.total === 'number' ? receipt.total.toFixed(2) : '0.00'}
                             </span>
                           </div>
                         ))}
@@ -328,11 +331,11 @@ const TripManager = () => {
                                     {new Date(receipt.date || receipt.createdAt).toLocaleDateString()}
                                   </span>
                                   <span className="receipt-amount">
-                                    ${(receipt.total || 0).toFixed(2)}
+                                    ${typeof receipt.total === 'number' ? receipt.total.toFixed(2) : '0.00'}
                                   </span>
                                   {receipt.location && (
                                     <span className="receipt-location">
-                                      📍 {receipt.location}
+                                      📍 {typeof receipt.location === 'string' ? receipt.location : receipt.location?.full || 'Unknown'}
                                     </span>
                                   )}
                                 </div>

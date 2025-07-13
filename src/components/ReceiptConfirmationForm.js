@@ -8,8 +8,8 @@ const ReceiptConfirmationForm = ({ receiptId, extractedData, onComplete, onCance
   const [formData, setFormData] = useState({
     date: extractedData?.date || '',
     total: extractedData?.total || '',
-    location: extractedData?.location?.full || '',
-    category: extractedData?.suggestedCategory || 'Other',
+    location: extractedData?.location || '',
+    category: extractedData?.category || 'Other',
     notes: '',
     merchant: ''
   });
@@ -161,7 +161,7 @@ const ReceiptConfirmationForm = ({ receiptId, extractedData, onComplete, onCance
             <p>This receipt appears to be from outside your usual location:</p>
             <div className="location-comparison">
               <div className="receipt-location">
-                <strong>Receipt Location:</strong> {extractedData?.location?.full}
+                <strong>Receipt Location:</strong> {typeof extractedData?.location === 'string' ? extractedData.location : extractedData?.location?.full || 'Unknown'}
               </div>
               {extractedData?.userDefaultLocation && (
                 <div className="user-location">
@@ -309,7 +309,7 @@ const ReceiptConfirmationForm = ({ receiptId, extractedData, onComplete, onCance
                   {suggestedReceipts.map(receipt => (
                     <div key={receipt.id} className="suggested-receipt">
                       <span className="receipt-info">
-                        {receipt.date} - ${receipt.total?.toFixed(2) || '0.00'} - {receipt.location?.full || 'Unknown location'}
+                        {receipt.date} - ${receipt.total?.toFixed(2) || '0.00'} - {typeof receipt.location === 'string' ? receipt.location : receipt.location?.full || 'Unknown location'}
                       </span>
                       <input type="checkbox" defaultChecked />
                     </div>

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { collection, query, where, orderBy, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../firebase';
+import { db, functions } from '../firebase';
 import './ReceiptList.css';
 
 export default function ReceiptList() {
@@ -11,6 +11,9 @@ export default function ReceiptList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deletingIds, setDeletingIds] = useState(new Set());
+  const [editingReceipt, setEditingReceipt] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!currentUser) {
@@ -116,16 +119,31 @@ export default function ReceiptList() {
   };
 
   const deleteReceipt = async (receiptId) => {
+    if (!currentUser) {
+      alert('You must be logged in to delete receipts');
+      return;
+    }
+
     if (!window.confirm('Are you sure you want to delete this receipt? This action cannot be undone.')) {
       return;
     }
 
+    console.log('Delete attempt:', {
+      receiptId,
+      userId: currentUser.uid,
+      userEmail: currentUser.email
+    });
+
     setDeletingIds(prev => new Set([...prev, receiptId]));
 
     try {
-      const functions = getFunctions();
+      // Ensure user is authenticated and get fresh token
+      const idToken = await currentUser.getIdToken(true);
+      console.log('Got auth token, length:', idToken.length);
+      
       const deleteReceiptFn = httpsCallable(functions, 'deleteReceipt');
       
+      console.log('Calling deleteReceipt function...');
       const result = await deleteReceiptFn({ receiptId });
       
       console.log('Receipt deleted successfully:', result.data);
@@ -157,6 +175,53 @@ export default function ReceiptList() {
     if (!timestamp) return 'Unknown';
     const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+  };
+
+  const handleEditReceipt = (receipt) => {
+    setEditingReceipt(receipt);
+    setEditForm({
+      originalName: receipt.originalName || '',
+      total: receipt.total || '',
+      date: receipt.date || '',
+      location: typeof receipt.location === 'string' ? receipt.location : receipt.location?.full || '',
+      category: receipt.category || '',
+      description: receipt.description || ''
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingReceipt || !currentUser) return;
+
+    setSaving(true);
+    try {
+      const receiptRef = doc(db, 'receipts', editingReceipt.id);
+      await updateDoc(receiptRef, {
+        originalName: editForm.originalName,
+        total: parseFloat(editForm.total) || 0,
+        date: editForm.date,
+        location: editForm.location,
+        category: editForm.category,
+        description: editForm.description,
+        updatedAt: new Date()
+      });
+      
+      setEditingReceipt(null);
+      setEditForm({});
+    } catch (error) {
+      console.error('Error updating receipt:', error);
+      alert('Failed to update receipt. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingReceipt(null);
+    setEditForm({});
+  };
+
+  const handleFormChange = (field, value) => {
+    setEditForm(prev => ({ ...prev, [field]: value }));
   };
 
   if (loading) {
@@ -199,7 +264,7 @@ export default function ReceiptList() {
       {receipts.length > 0 && (
         <div className="receipt-grid">
           {receipts.map((receipt) => (
-            <div key={receipt.id} className="receipt-card">
+            <div key={receipt.id} className="receipt-card" onClick={() => handleEditReceipt(receipt)}>
               <div className="receipt-image">
                 <img 
                   src={receipt.storageUrl} 
@@ -218,34 +283,34 @@ export default function ReceiptList() {
                 </div>
                 
                 {/* Display OCR data if available */}
-                {receipt.extractedData && (
+                {(receipt.total || receipt.date || receipt.location || receipt.category) && (
                   <div className="receipt-ocr-data">
                     <div className="ocr-header">
                       <span className="ocr-badge">✅ Processed</span>
                     </div>
                     <div className="ocr-details">
-                      {receipt.extractedData.total && (
+                      {receipt.total && (
                         <div className="ocr-item">
                           <span className="ocr-label">💰</span>
-                          <span className="ocr-value">${receipt.extractedData.total}</span>
+                          <span className="ocr-value">${typeof receipt.total === 'number' ? receipt.total.toFixed(2) : receipt.total}</span>
                         </div>
                       )}
-                      {receipt.extractedData.date && (
+                      {receipt.date && (
                         <div className="ocr-item">
                           <span className="ocr-label">📅</span>
-                          <span className="ocr-value">{receipt.extractedData.date}</span>
+                          <span className="ocr-value">{receipt.date}</span>
                         </div>
                       )}
-                      {receipt.extractedData.location && (
+                      {receipt.location && (
                         <div className="ocr-item">
                           <span className="ocr-label">📍</span>
-                          <span className="ocr-value">{receipt.extractedData.location}</span>
+                          <span className="ocr-value">{typeof receipt.location === 'string' ? receipt.location : receipt.location?.full || 'Unknown'}</span>
                         </div>
                       )}
-                      {receipt.extractedData.category && (
+                      {receipt.category && (
                         <div className="ocr-item">
                           <span className="ocr-label">🏷️</span>
-                          <span className="ocr-value">{receipt.extractedData.category}</span>
+                          <span className="ocr-value">{receipt.category}</span>
                         </div>
                       )}
                     </div>
@@ -253,7 +318,7 @@ export default function ReceiptList() {
                 )}
                 
                 {/* Show processing status if no OCR data yet */}
-                {!receipt.extractedData && (
+                {!(receipt.total || receipt.date || receipt.location || receipt.category) && (
                   <div className="receipt-status">
                     <span className="status-badge processing">🔍 Processing...</span>
                   </div>
@@ -262,8 +327,21 @@ export default function ReceiptList() {
                 {/* Receipt Actions */}
                 <div className="receipt-actions">
                   <button 
+                    className="edit-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditReceipt(receipt);
+                    }}
+                    title="Edit receipt"
+                  >
+                    ✏️ Edit
+                  </button>
+                  <button 
                     className={`delete-btn ${deletingIds.has(receipt.id) ? 'deleting' : ''}`}
-                    onClick={() => deleteReceipt(receipt.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteReceipt(receipt.id);
+                    }}
                     disabled={deletingIds.has(receipt.id)}
                     title="Delete receipt"
                   >
@@ -282,6 +360,101 @@ export default function ReceiptList() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {editingReceipt && (
+        <div className="modal-overlay" onClick={handleCancelEdit}>
+          <div className="edit-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>✏️ Edit Receipt</h3>
+              <button className="close-btn" onClick={handleCancelEdit}>×</button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="form-group">
+                <label>Receipt Name:</label>
+                <input
+                  type="text"
+                  value={editForm.originalName}
+                  onChange={(e) => handleFormChange('originalName', e.target.value)}
+                  placeholder="Enter receipt name"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Total Amount:</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={editForm.total}
+                  onChange={(e) => handleFormChange('total', e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Date:</label>
+                <input
+                  type="text"
+                  value={editForm.date}
+                  onChange={(e) => handleFormChange('date', e.target.value)}
+                  placeholder="Enter date"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Location:</label>
+                <input
+                  type="text"
+                  value={editForm.location}
+                  onChange={(e) => handleFormChange('location', e.target.value)}
+                  placeholder="Enter location"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Category:</label>
+                <input
+                  type="text"
+                  value={editForm.category}
+                  onChange={(e) => handleFormChange('category', e.target.value)}
+                  placeholder="Enter category"
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>Description:</label>
+                <textarea
+                  value={editForm.description}
+                  onChange={(e) => handleFormChange('description', e.target.value)}
+                  placeholder="Enter description (optional)"
+                  rows="3"
+                />
+              </div>
+            </div>
+            
+            <div className="modal-footer">
+              <button className="cancel-btn" onClick={handleCancelEdit}>
+                Cancel
+              </button>
+              <button 
+                className="save-btn" 
+                onClick={handleSaveEdit}
+                disabled={saving}
+              >
+                {saving ? (
+                  <>
+                    <span className="spinner"></span>
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

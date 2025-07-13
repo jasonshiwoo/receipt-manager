@@ -9,14 +9,13 @@ const db = admin.firestore();
 // Initialize Google Cloud Vision client with secure credential handling
 let visionClient;
 try {
-  // Method 1: Try Firebase Functions Config (Production)
-  const firebaseConfig = functions.config().google;
-  if (firebaseConfig && firebaseConfig.credentials) {
-    console.log('Using Firebase Functions Config for credentials');
-    const credentials = typeof firebaseConfig.credentials === 'string' 
-      ? JSON.parse(firebaseConfig.credentials) 
-      : firebaseConfig.credentials;
-    
+  // Method 1: Try Environment Variables (Production)
+  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    console.log('Using GOOGLE_APPLICATION_CREDENTIALS environment variable');
+    visionClient = new ImageAnnotatorClient();
+  } else if (process.env.GOOGLE_CLOUD_CREDENTIALS) {
+    console.log('Using GOOGLE_CLOUD_CREDENTIALS environment variable');
+    const credentials = JSON.parse(process.env.GOOGLE_CLOUD_CREDENTIALS);
     visionClient = new ImageAnnotatorClient({
       credentials: credentials
     });
@@ -32,9 +31,9 @@ try {
 } catch (error) {
   console.error('Failed to initialize Google Cloud Vision client:', error);
   console.error('Make sure to set up credentials using one of these methods:');
-  console.error('1. Firebase config: firebase functions:config:set google.credentials="$(cat key.json)"');
-  console.error('2. Local file: Place service-account-key.json in functions/ directory');
-  console.error('3. Environment: Set GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json');
+  console.error('1. Environment: Set GOOGLE_APPLICATION_CREDENTIALS=/path/to/key.json');
+  console.error('2. Environment: Set GOOGLE_CLOUD_CREDENTIALS with JSON credentials');
+  console.error('3. Local file: Place service-account-key.json in functions/ directory');
   // Client will be undefined if initialization fails
 }
 
@@ -200,13 +199,23 @@ function suggestCategory(text) {
 }
 
 exports.processReceipt = functions.https.onCall(async (data, context) => {
+  console.log('processReceipt called with:', { data, authExists: !!context.auth });
+  
+  // Handle both old and new authentication formats
+  let authContext = context.auth;
+  if (!authContext && data.auth) {
+    authContext = data.auth;
+  }
+  
   // Verify user is authenticated
-  if (!context.auth) {
+  if (!authContext) {
+    console.error('No authentication context found in processReceipt');
     throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
   }
 
   // Validate input parameters
-  const { imageUrl, receiptId } = data;
+  const imageUrl = data.imageUrl || data.data?.imageUrl;
+  const receiptId = data.receiptId || data.data?.receiptId;
   if (!imageUrl || !receiptId) {
     throw new functions.https.HttpsError('invalid-argument', 'imageUrl and receiptId are required');
   }
@@ -216,7 +225,7 @@ exports.processReceipt = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError('unavailable', 'Google Cloud Vision service is not available');
   }
 
-  const userId = context.auth.uid;
+  const userId = authContext.uid;
   console.log(`Processing receipt ${receiptId} for user ${userId}`);
 
   try {
@@ -509,21 +518,36 @@ exports.updateUserSettings = functions.https.onCall(async (data, context) => {
 
 // Delete Receipt Function
 exports.deleteReceipt = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
+  console.log('deleteReceipt called with:', { data, authExists: !!context.auth });
+  
+  // Handle both old and new authentication formats
+  let authContext = context.auth;
+  if (!authContext && data.auth) {
+    authContext = data.auth;
+  }
+  
+  if (!authContext) {
+    console.error('No authentication context found');
     throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
   }
 
-  const { receiptId } = data;
-  const userId = context.auth.uid;
+  const receiptId = data.receiptId || data.data?.receiptId;
+  const userId = authContext.uid;
+  
+  console.log('deleteReceipt authenticated user:', { userId, receiptId });
 
   if (!receiptId) {
     throw new functions.https.HttpsError('invalid-argument', 'receiptId is required');
   }
 
   try {
+    console.log('Starting receipt deletion process...');
+    
     // Get the receipt document to verify ownership and get storage path
     const receiptRef = db.collection('receipts').doc(receiptId);
+    console.log('Attempting to get receipt document...');
     const receiptDoc = await receiptRef.get();
+    console.log('Receipt document retrieved, exists:', receiptDoc.exists);
 
     if (!receiptDoc.exists) {
       throw new functions.https.HttpsError('not-found', 'Receipt not found');
@@ -531,14 +555,20 @@ exports.deleteReceipt = functions.https.onCall(async (data, context) => {
 
     const receiptData = receiptDoc.data();
 
+    console.log('Receipt data:', { userId: receiptData.userId, storagePath: receiptData.storagePath });
+    
     // Verify ownership
     if (receiptData.userId !== userId) {
+      console.error('Ownership verification failed:', { receiptUserId: receiptData.userId, requestUserId: userId });
       throw new functions.https.HttpsError('permission-denied', 'You can only delete your own receipts');
     }
+    
+    console.log('Ownership verified, proceeding with deletion...');
 
     // Delete from Firebase Storage if storage path exists
     if (receiptData.storagePath) {
       try {
+        console.log('Attempting to delete storage file:', receiptData.storagePath);
         const bucket = admin.storage().bucket();
         await bucket.file(receiptData.storagePath).delete();
         console.log(`Deleted storage file: ${receiptData.storagePath}`);
@@ -549,6 +579,7 @@ exports.deleteReceipt = functions.https.onCall(async (data, context) => {
     }
 
     // Delete from Firestore
+    console.log('Attempting to delete Firestore document...');
     await receiptRef.delete();
     console.log(`Deleted receipt document: ${receiptId}`);
 
@@ -575,6 +606,7 @@ exports.deleteReceipt = functions.https.onCall(async (data, context) => {
       console.log(`Removed receipt ${receiptId} from ${tripsSnapshot.size} trip(s)`);
     }
 
+    console.log('Receipt deleted successfully:', receiptId);
     return {
       success: true,
       message: 'Receipt deleted successfully',

@@ -353,7 +353,7 @@ export default function ReceiptUpload() {
                         <span className="ocr-item">📅 {upload.ocrData.extractedData.date}</span>
                       )}
                       {upload.ocrData.extractedData?.location && (
-                        <span className="ocr-item">📍 {upload.ocrData.extractedData.location}</span>
+                        <span className="ocr-item">📍 {typeof upload.ocrData.extractedData.location === 'string' ? upload.ocrData.extractedData.location : upload.ocrData.extractedData.location?.full || 'Unknown'}</span>
                       )}
                     </div>
                   </div>

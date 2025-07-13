@@ -39,6 +39,7 @@ const ReceiptProcessor = ({ receiptId, imageUrl, onProcessingComplete }) => {
       });
 
       console.log('OCR processing result:', response.data);
+      console.log('Setting result and showing confirmation...');
       setResult(response.data);
       setShowConfirmation(true);
       
@@ -137,35 +138,35 @@ const ReceiptProcessor = ({ receiptId, imageUrl, onProcessingComplete }) => {
           </div>
           
           <div className="quick-summary">
-            {result.extractedData?.date && (
+            {result.date && (
               <div className="summary-item">
                 <span className="icon">📅</span>
                 <span className="label">Date:</span>
-                <span className="value">{result.extractedData.date}</span>
+                <span className="value">{result.date}</span>
               </div>
             )}
-            {result.extractedData?.total && (
+            {result.total && (
               <div className="summary-item">
                 <span className="icon">💰</span>
                 <span className="label">Total:</span>
-                <span className="value">${result.extractedData.total.toFixed(2)}</span>
+                <span className="value">${result.total.toFixed(2)}</span>
               </div>
             )}
-            {result.extractedData?.location && (
+            {result.location && (
               <div className="summary-item">
                 <span className="icon">📍</span>
                 <span className="label">Location:</span>
-                <span className="value">{result.extractedData.location.full}</span>
+                <span className="value">{typeof result.location === 'string' ? result.location : result.location?.full || 'Unknown'}</span>
               </div>
             )}
-            {result.extractedData?.suggestedCategory && (
+            {result.category && (
               <div className="summary-item">
                 <span className="icon">🏷️</span>
                 <span className="label">Category:</span>
-                <span className="value">{result.extractedData.suggestedCategory}</span>
+                <span className="value">{result.category}</span>
               </div>
             )}
-            {result.extractedData?.isPotentialTrip && (
+            {result.isPotentialTrip && (
               <div className="summary-item trip-detected">
                 <span className="icon">✈️</span>
                 <span className="label">Trip Detected:</span>
