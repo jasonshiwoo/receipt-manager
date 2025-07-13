@@ -91,7 +91,20 @@ cd functions && npm install && cd ..
 
 1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
 2. Enable Authentication, Firestore, Storage, Functions, and Hosting
-3. Copy your Firebase config to `src/firebase.js`
+3. Get your Firebase configuration:
+   - Go to Project Settings → General → Your apps
+   - Copy the Firebase configuration object
+4. Create a `.env` file in the project root:
+   ```bash
+   REACT_APP_FIREBASE_API_KEY=your_api_key_here
+   REACT_APP_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+   REACT_APP_FIREBASE_PROJECT_ID=your_project_id
+   REACT_APP_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+   REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+   REACT_APP_FIREBASE_APP_ID=your_app_id
+   REACT_APP_FIREBASE_MEASUREMENT_ID=your_measurement_id
+   ```
+5. **NEVER commit the `.env` file to version control**
 
 ### 4. Google Cloud Vision Setup
 
