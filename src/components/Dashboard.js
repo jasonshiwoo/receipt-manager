@@ -3,6 +3,7 @@ import AccountMenu from './AccountMenu';
 import ReceiptUpload from './ReceiptUpload';
 import ReceiptList from './ReceiptList';
 import TripManager from './TripManager';
+import SpendingTrends from './SpendingTrends';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -27,23 +28,25 @@ export default function Dashboard() {
         return (
           <section className="analytics-section">
             <h2>📊 Analytics</h2>
-            <p>Coming soon: Detailed spending reports and insights</p>
+            <p>Detailed spending reports and insights</p>
+            
+            <SpendingTrends />
+            
             <div className="features-grid">
-              <div className="feature-card">
-                <h3>📈 Spending Trends</h3>
-                <p>Track your spending patterns over time</p>
-              </div>
               <div className="feature-card">
                 <h3>🏷️ Category Breakdown</h3>
                 <p>See where your money goes by category</p>
+                <span className="coming-soon">Coming Soon</span>
               </div>
               <div className="feature-card">
                 <h3>✈️ Trip Expenses</h3>
                 <p>Analyze costs for each trip</p>
+                <span className="coming-soon">Coming Soon</span>
               </div>
               <div className="feature-card">
                 <h3>📋 Export Reports</h3>
                 <p>Generate reports for expense reimbursement</p>
+                <span className="coming-soon">Coming Soon</span>
               </div>
             </div>
           </section>

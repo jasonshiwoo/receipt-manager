@@ -127,6 +127,7 @@
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
   text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
 }
 
 .feature-card:hover {
@@ -144,6 +145,21 @@
   color: #666;
   margin-bottom: 1.5rem;
   line-height: 1.5;
+}
+
+.coming-soon {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 2px 4px rgba(240, 147, 251, 0.3);
 }
 
 .feature-btn {

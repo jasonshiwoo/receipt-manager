@@ -1,0 +1,229 @@
+/* Spending Trends Component */
+.spending-trends {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  margin-bottom: 2rem;
+  border: 1px solid rgba(229, 231, 235, 0.8);
+}
+
+.spending-trends-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.spending-trends-header h3 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.date-filter {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.date-filter-select {
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  color: #374151;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 140px;
+}
+
+.date-filter-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.date-filter-select:hover {
+  border-color: #d1d5db;
+}
+
+/* Custom Date Range */
+.custom-date-range {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.date-input {
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 6px;
+  background: white;
+  color: #374151;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.custom-date-range span {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Spending Summary */
+.spending-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.summary-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+.summary-value {
+  font-size: 1rem;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.total-amount {
+  color: #059669;
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+/* Chart Container */
+.chart-container {
+  height: 400px;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #fafafa;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+/* No Data Message */
+.no-data-message {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 2px dashed #d1d5db;
+  margin-top: 1rem;
+}
+
+.no-data-message p {
+  margin: 0.5rem 0;
+}
+
+.no-data-message p:first-child {
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .spending-trends {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .spending-trends-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .date-filter {
+    justify-content: center;
+  }
+  
+  .date-filter-select {
+    width: 100%;
+    min-width: unset;
+  }
+  
+  .custom-date-range {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .date-input {
+    width: 100%;
+  }
+  
+  .spending-summary {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .summary-item {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+  }
+  
+  .chart-container {
+    height: 300px;
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .spending-trends-header h3 {
+    font-size: 1.125rem;
+  }
+  
+  .chart-container {
+    height: 250px;
+    padding: 0.5rem;
+  }
+  
+  .spending-summary {
+    padding: 0.75rem;
+  }
+}
