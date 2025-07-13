@@ -14,6 +14,9 @@ export default function ReceiptList() {
   const [editingReceipt, setEditingReceipt] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const [showNewCategoryInput, setShowNewCategoryInput] = useState(false);
+  const [newCategoryValue, setNewCategoryValue] = useState('');
 
   useEffect(() => {
     if (!currentUser) {
@@ -109,6 +112,22 @@ export default function ReceiptList() {
       }
     };
   }, [currentUser]);
+
+  // Get unique categories from all receipts
+  const getUniqueCategories = () => {
+    const uniqueCategories = [...new Set(
+      receipts
+        .filter(receipt => receipt.category && receipt.category.trim() !== '')
+        .map(receipt => receipt.category.trim())
+    )].sort();
+    setCategories(uniqueCategories);
+  };
+
+  useEffect(() => {
+    if (receipts.length > 0) {
+      getUniqueCategories();
+    }
+  }, [receipts]);
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
@@ -222,6 +241,35 @@ export default function ReceiptList() {
 
   const handleFormChange = (field, value) => {
     setEditForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleCategoryChange = (value) => {
+    if (value === 'ADD_NEW') {
+      setShowNewCategoryInput(true);
+      setNewCategoryValue('');
+    } else {
+      setShowNewCategoryInput(false);
+      handleFormChange('category', value);
+    }
+  };
+
+  const handleNewCategorySubmit = () => {
+    if (newCategoryValue.trim()) {
+      const newCategory = newCategoryValue.trim();
+      handleFormChange('category', newCategory);
+      setShowNewCategoryInput(false);
+      setNewCategoryValue('');
+      
+      // Add to categories list if not already there
+      if (!categories.includes(newCategory)) {
+        setCategories(prev => [...prev, newCategory].sort());
+      }
+    }
+  };
+
+  const handleCancelNewCategory = () => {
+    setShowNewCategoryInput(false);
+    setNewCategoryValue('');
   };
 
   if (loading) {
@@ -416,12 +464,54 @@ export default function ReceiptList() {
               
               <div className="form-group">
                 <label>Category:</label>
-                <input
-                  type="text"
-                  value={editForm.category}
-                  onChange={(e) => handleFormChange('category', e.target.value)}
-                  placeholder="Enter category"
-                />
+                {showNewCategoryInput ? (
+                  <div className="new-category-input">
+                    <input
+                      type="text"
+                      value={newCategoryValue}
+                      onChange={(e) => setNewCategoryValue(e.target.value)}
+                      placeholder="Enter new category"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleNewCategorySubmit();
+                        } else if (e.key === 'Escape') {
+                          handleCancelNewCategory();
+                        }
+                      }}
+                      autoFocus
+                    />
+                    <div className="new-category-buttons">
+                      <button 
+                        type="button" 
+                        className="add-category-btn"
+                        onClick={handleNewCategorySubmit}
+                      >
+                        ✓ Add
+                      </button>
+                      <button 
+                        type="button" 
+                        className="cancel-category-btn"
+                        onClick={handleCancelNewCategory}
+                      >
+                        ✕ Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <select
+                    value={editForm.category || ''}
+                    onChange={(e) => handleCategoryChange(e.target.value)}
+                    className="category-dropdown"
+                  >
+                    <option value="">Select a category...</option>
+                    {categories.map(category => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                    <option value="ADD_NEW">➕ Add new category...</option>
+                  </select>
+                )}
               </div>
               
               <div className="form-group">
