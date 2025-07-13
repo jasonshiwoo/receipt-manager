@@ -1,0 +1,36 @@
+# Compiled JavaScript files
+lib/
+node_modules/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Service Account Keys - NEVER COMMIT THESE
+service-account-key.json
+google-credentials.json
+gcp-key.json
+*-key.json
+*-credentials.json
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Firebase debug files
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

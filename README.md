@@ -1,49 +1,119 @@
-# Getting Started with Create React App
+# Receipt Manager
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A modern web application for managing and organizing receipts, built with React and Firebase.
+
+## Features
+
+- 🔐 **Firebase Authentication** - Secure email/password login
+- 📄 **Receipt Storage** - Upload and store receipt images
+- 🔍 **Search & Filter** - Find receipts quickly
+- 📊 **Analytics** - Track spending patterns
+- 📱 **Responsive Design** - Works on all devices
+- 🔒 **Data Isolation** - Each user's data is completely isolated
+
+## Setup Instructions
+
+### 1. Firebase Project Setup
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Create a new project called "Receipt Manager"
+3. Enable the following services:
+   - **Authentication** (Email/Password provider)
+   - **Firestore Database**
+   - **Storage**
+   - **Hosting**
+
+### 2. Get Firebase Configuration
+
+1. In your Firebase project, go to Project Settings
+2. Scroll down to "Your apps" and click "Add app" → Web
+3. Register your app with nickname "Receipt Manager"
+4. Copy the Firebase configuration object
+5. Replace the placeholder values in `src/firebase.js` with your actual config
+
+### 3. Deploy Security Rules
+
+```bash
+# Login to Firebase (if not already logged in)
+npx firebase login
+
+# Initialize Firebase in your project
+npx firebase init
+
+# Deploy Firestore security rules
+npx firebase deploy --only firestore:rules
+
+# Deploy Storage security rules
+npx firebase deploy --only storage
+```
+
+### 4. Install Dependencies & Run
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm start
+```
+
+The app will open at [http://localhost:3000](http://localhost:3000)
+
+### 5. Deploy to Firebase Hosting
+
+```bash
+# Build the app
+npm run build
+
+# Deploy to Firebase Hosting
+npx firebase deploy --only hosting
+```
+
+## Project Structure
+
+```
+src/
+├── components/
+│   ├── Login.js          # Authentication component
+│   ├── Login.css         # Login styles
+│   ├── Dashboard.js      # Main dashboard
+│   └── Dashboard.css     # Dashboard styles
+├── contexts/
+│   └── AuthContext.js    # Authentication context
+├── firebase.js           # Firebase configuration
+├── App.js               # Main app component
+└── App.css              # Global styles
+```
+
+## Security Features
+
+- **Firestore Rules**: Users can only access their own data
+- **Storage Rules**: Users can only access files in their own folders
+- **Authentication**: Email/password authentication required
+- **Data Isolation**: Each user's receipts are stored under their user ID
 
 ## Available Scripts
 
-In the project directory, you can run:
+- `npm start` - Run development server
+- `npm run build` - Build for production
+- `npm test` - Run tests
+- `npx firebase deploy` - Deploy to Firebase
 
-### `npm start`
+## Next Steps
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+The basic authentication and homepage are complete. You can now:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+1. Add receipt upload functionality
+2. Implement receipt listing and search
+3. Add spending analytics
+4. Enhance the UI with more features
 
-### `npm test`
+## Support
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+If you encounter any issues during setup, please check:
+- Firebase project configuration
+- Security rules deployment
+- Authentication provider settings
 
 ### Code Splitting
 
