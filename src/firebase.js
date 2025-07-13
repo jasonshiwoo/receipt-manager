@@ -5,15 +5,15 @@ import { getStorage } from 'firebase/storage';
 import { getFunctions } from 'firebase/functions';
 
 // Your web app's Firebase configuration
-// Replace these values with your actual Firebase config
+// Using environment variables for security
 const firebaseConfig = {
-  apiKey: "AIzaSyBgtvW6d1ubAsX5kKpU42m6wd5gbF0Kr-g",
-  authDomain: "receipt-manager-2c61b.firebaseapp.com",
-  projectId: "receipt-manager-2c61b",
-  storageBucket: "receipt-manager-2c61b.firebasestorage.app",
-  messagingSenderId: "1082387604545",
-  appId: "1:1082387604545:web:06d1a663f62ca4a48592c0",
-  measurementId: "G-3CY92QPVK7"
+  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.REACT_APP_FIREBASE_APP_ID,
+  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
