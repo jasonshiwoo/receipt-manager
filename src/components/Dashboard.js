@@ -4,6 +4,7 @@ import ReceiptUpload from './ReceiptUpload';
 import ReceiptList from './ReceiptList';
 import TripManager from './TripManager';
 import SpendingTrends from './SpendingTrends';
+import CategoryBreakdown from './CategoryBreakdown';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -32,12 +33,9 @@ export default function Dashboard() {
             
             <SpendingTrends />
             
+            <CategoryBreakdown />
+            
             <div className="features-grid">
-              <div className="feature-card">
-                <h3>🏷️ Category Breakdown</h3>
-                <p>See where your money goes by category</p>
-                <span className="coming-soon">Coming Soon</span>
-              </div>
               <div className="feature-card">
                 <h3>✈️ Trip Expenses</h3>
                 <p>Analyze costs for each trip</p>
