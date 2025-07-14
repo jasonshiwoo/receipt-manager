@@ -11,9 +11,18 @@ const TripManager = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [editingTrip, setEditingTrip] = useState(null);
   const [selectedTrip, setSelectedTrip] = useState(null);
   
   const [newTrip, setNewTrip] = useState({
+    name: '',
+    startDate: '',
+    endDate: '',
+    location: ''
+  });
+  
+  const [editTrip, setEditTrip] = useState({
     name: '',
     startDate: '',
     endDate: '',
@@ -94,6 +103,60 @@ const TripManager = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditTrip = (trip) => {
+    setEditingTrip(trip);
+    setEditTrip({
+      name: trip.name,
+      startDate: trip.startDate?.toDate ? trip.startDate.toDate().toISOString().split('T')[0] : new Date(trip.startDate).toISOString().split('T')[0],
+      endDate: trip.endDate?.toDate ? trip.endDate.toDate().toISOString().split('T')[0] : new Date(trip.endDate).toISOString().split('T')[0],
+      location: trip.location || ''
+    });
+    setShowEditForm(true);
+  };
+
+  const handleUpdateTrip = async (e) => {
+    e.preventDefault();
+    if (!editTrip.name || !editTrip.startDate || !editTrip.endDate) {
+      setError('Please fill in all required fields');
+      return;
+    }
+
+    if (!user || !editingTrip) {
+      setError('You must be logged in to update a trip');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const tripData = {
+        name: editTrip.name,
+        startDate: new Date(editTrip.startDate),
+        endDate: new Date(editTrip.endDate),
+        location: editTrip.location || '',
+        updatedAt: serverTimestamp()
+      };
+
+      await updateDoc(doc(db, `users/${user.uid}/trips`, editingTrip.id), tripData);
+
+      setEditTrip({ name: '', startDate: '', endDate: '', location: '' });
+      setEditingTrip(null);
+      setShowEditForm(false);
+    } catch (error) {
+      console.error('Error updating trip:', error);
+      setError(error.message || 'Failed to update trip');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditTrip({ name: '', startDate: '', endDate: '', location: '' });
+    setEditingTrip(null);
+    setShowEditForm(false);
   };
 
   const handleAssignReceipt = async (receiptId, tripId, tripName) => {
@@ -268,6 +331,91 @@ const TripManager = () => {
         </div>
       )}
 
+      {showEditForm && (
+        <div className="create-trip-form">
+          <div className="form-header">
+            <h3>✏️ Edit Trip</h3>
+            <button 
+              onClick={handleCancelEdit}
+              className="close-btn"
+            >
+              ✕
+            </button>
+          </div>
+          
+          <form onSubmit={handleUpdateTrip}>
+            <div className="form-group">
+              <label>Trip Name *</label>
+              <input
+                type="text"
+                value={editTrip.name}
+                onChange={(e) => setEditTrip(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="e.g., Business Trip to NYC, Vacation in Paris"
+                required
+              />
+            </div>
+            
+            <div className="form-row">
+              <div className="form-group">
+                <label>Start Date *</label>
+                <input
+                  type="date"
+                  value={editTrip.startDate}
+                  onChange={(e) => setEditTrip(prev => ({ ...prev, startDate: e.target.value }))}
+                  required
+                />
+              </div>
+              
+              <div className="form-group">
+                <label>End Date *</label>
+                <input
+                  type="date"
+                  value={editTrip.endDate}
+                  onChange={(e) => setEditTrip(prev => ({ ...prev, endDate: e.target.value }))}
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="form-group">
+              <label>Location</label>
+              <input
+                type="text"
+                value={editTrip.location}
+                onChange={(e) => setEditTrip(prev => ({ ...prev, location: e.target.value }))}
+                placeholder="City, State/Country"
+              />
+            </div>
+            
+            <div className="form-actions">
+              <button 
+                type="button" 
+                onClick={handleCancelEdit}
+                className="btn-cancel"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                className="btn-update"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <div className="spinner"></div>
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    ✅ Update Trip
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       <div className="trips-section">
         <h3>📋 Your Trips ({trips.length})</h3>
         
@@ -330,6 +478,12 @@ const TripManager = () => {
                   )}
                   
                   <div className="trip-actions">
+                    <button 
+                      onClick={() => handleEditTrip(trip)}
+                      className="btn-edit"
+                    >
+                      ✏️ Edit
+                    </button>
                     <button 
                       onClick={() => setSelectedTrip(selectedTrip === trip.id ? null : trip.id)}
                       className="btn-manage"
