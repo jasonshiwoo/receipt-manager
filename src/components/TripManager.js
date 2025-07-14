@@ -67,6 +67,51 @@ const TripManager = () => {
     };
   }, [user]);
 
+  // Auto-assign receipts to trips based on date ranges
+  const autoAssignReceipts = async () => {
+    if (!user || trips.length === 0 || receipts.length === 0) return;
+
+    const unassignedReceipts = receipts.filter(receipt => !receipt.tripId);
+    
+    for (const receipt of unassignedReceipts) {
+      const receiptDate = new Date(receipt.date || receipt.createdAt);
+      
+      // Find a trip that contains this receipt's date
+      const matchingTrip = trips.find(trip => {
+        const tripStartDate = trip.startDate?.toDate ? trip.startDate.toDate() : new Date(trip.startDate);
+        const tripEndDate = trip.endDate?.toDate ? trip.endDate.toDate() : new Date(trip.endDate);
+        
+        // Set times to start/end of day for proper comparison
+        tripStartDate.setHours(0, 0, 0, 0);
+        tripEndDate.setHours(23, 59, 59, 999);
+        receiptDate.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+        
+        return receiptDate >= tripStartDate && receiptDate <= tripEndDate;
+      });
+      
+      if (matchingTrip) {
+        try {
+          const receiptRef = doc(db, 'receipts', receipt.id);
+          await updateDoc(receiptRef, {
+            tripId: matchingTrip.id,
+            tripName: matchingTrip.name,
+            updatedAt: serverTimestamp()
+          });
+          console.log(`Auto-assigned receipt ${receipt.id} to trip ${matchingTrip.name}`);
+        } catch (error) {
+          console.error('Error auto-assigning receipt:', error);
+        }
+      }
+    }
+  };
+
+  // Auto-assign receipts when trips or receipts change
+  useEffect(() => {
+    // Debounce the auto-assignment to avoid excessive calls
+    const timeoutId = setTimeout(autoAssignReceipts, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [trips, receipts, user]);
+
   const handleCreateTrip = async (e) => {
     e.preventDefault();
     if (!newTrip.name || !newTrip.startDate || !newTrip.endDate) {
@@ -103,6 +148,9 @@ const TripManager = () => {
 
       setNewTrip({ name: '', startDate: '', endDate: '', location: '' });
       setShowCreateForm(false);
+      
+      // Trigger auto-assignment for the new trip
+      setTimeout(autoAssignReceipts, 500);
     } catch (error) {
       console.error('Error creating trip:', error);
       setError(error.message || 'Failed to create trip');
@@ -157,6 +205,9 @@ const TripManager = () => {
       setEditTrip({ name: '', startDate: '', endDate: '', location: '' });
       setEditingTrip(null);
       setShowEditForm(false);
+      
+      // Trigger auto-assignment for the updated trip
+      setTimeout(autoAssignReceipts, 500);
     } catch (error) {
       console.error('Error updating trip:', error);
       setError(error.message || 'Failed to update trip');
