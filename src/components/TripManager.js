@@ -83,10 +83,16 @@ const TripManager = () => {
     setError(null);
 
     try {
+      // Create dates at local midnight to avoid timezone issues
+      const createLocalDate = (dateString) => {
+        const [year, month, day] = dateString.split('-').map(Number);
+        return new Date(year, month - 1, day); // month is 0-indexed
+      };
+
       const tripData = {
         name: newTrip.name,
-        startDate: new Date(newTrip.startDate),
-        endDate: new Date(newTrip.endDate),
+        startDate: createLocalDate(newTrip.startDate),
+        endDate: createLocalDate(newTrip.endDate),
         location: newTrip.location || '',
         userId: user.uid,
         createdAt: serverTimestamp(),
@@ -132,10 +138,16 @@ const TripManager = () => {
     setError(null);
 
     try {
+      // Create dates at local midnight to avoid timezone issues
+      const createLocalDate = (dateString) => {
+        const [year, month, day] = dateString.split('-').map(Number);
+        return new Date(year, month - 1, day); // month is 0-indexed
+      };
+
       const tripData = {
         name: editTrip.name,
-        startDate: new Date(editTrip.startDate),
-        endDate: new Date(editTrip.endDate),
+        startDate: createLocalDate(editTrip.startDate),
+        endDate: createLocalDate(editTrip.endDate),
         location: editTrip.location || '',
         updatedAt: serverTimestamp()
       };
