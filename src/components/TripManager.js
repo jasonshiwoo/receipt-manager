@@ -136,6 +136,19 @@ const TripManager = () => {
     }, 0);
   };
 
+  const formatDate = (dateValue) => {
+    if (!dateValue) return 'Invalid Date';
+    
+    // Handle Firestore Timestamp objects
+    if (dateValue.toDate && typeof dateValue.toDate === 'function') {
+      return dateValue.toDate().toLocaleDateString();
+    }
+    
+    // Handle regular Date objects or date strings
+    const date = new Date(dateValue);
+    return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString();
+  };
+
   if (!user) {
     return (
       <div className="trip-manager">
@@ -275,7 +288,7 @@ const TripManager = () => {
                   <div className="trip-header">
                     <h4>{trip.name}</h4>
                     <div className="trip-dates">
-                      {new Date(trip.startDate).toLocaleDateString()} - {new Date(trip.endDate).toLocaleDateString()}
+                      {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
                     </div>
                     {trip.location && (
                       <div className="trip-location">📍 {trip.location}</div>
