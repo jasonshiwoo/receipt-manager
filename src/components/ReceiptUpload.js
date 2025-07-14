@@ -14,8 +14,117 @@ export default function ReceiptUpload() {
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
 
-  // Handle file selection
-  const handleFiles = (files) => {
+  // Image preprocessing functions
+  const preprocessImage = async (file) => {
+    console.log('Preprocessing image:', file.name);
+    
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.onload = () => {
+        // Calculate new dimensions (max width 2048px)
+        const maxWidth = 2048;
+        let { width, height } = img;
+        
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Draw image with enhanced processing
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Apply image enhancements
+        const imageData = ctx.getImageData(0, 0, width, height);
+        const enhancedData = enhanceImageForOCR(imageData);
+        ctx.putImageData(enhancedData, 0, 0);
+        
+        // Convert back to blob
+        canvas.toBlob((blob) => {
+          console.log(`Image preprocessed: ${file.name} (${file.size} -> ${blob.size} bytes, ${img.width}x${img.height} -> ${width}x${height})`);
+          resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+        }, 'image/jpeg', 0.92);
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+  };
+  
+  // Enhance image for better OCR accuracy
+  const enhanceImageForOCR = (imageData) => {
+    const data = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+    
+    // Apply contrast and sharpness enhancement
+    for (let i = 0; i < data.length; i += 4) {
+      let r = data[i];
+      let g = data[i + 1];
+      let b = data[i + 2];
+      
+      // Convert to grayscale for better text recognition
+      const gray = 0.299 * r + 0.587 * g + 0.114 * b;
+      
+      // Apply contrast enhancement (increase contrast for text)
+      const contrast = 1.3;
+      const enhancedGray = Math.min(255, Math.max(0, (gray - 128) * contrast + 128));
+      
+      // Apply threshold for better text separation
+      const threshold = 180;
+      const finalValue = enhancedGray > threshold ? 255 : Math.max(0, enhancedGray * 0.8);
+      
+      data[i] = finalValue;     // R
+      data[i + 1] = finalValue; // G
+      data[i + 2] = finalValue; // B
+      // Alpha channel remains unchanged
+    }
+    
+    // Apply sharpening filter
+    return applySharpeningFilter(imageData);
+  };
+  
+  // Apply sharpening filter to improve text clarity
+  const applySharpeningFilter = (imageData) => {
+    const data = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+    const newData = new Uint8ClampedArray(data);
+    
+    // Sharpening kernel
+    const kernel = [
+      0, -1, 0,
+      -1, 5, -1,
+      0, -1, 0
+    ];
+    
+    for (let y = 1; y < height - 1; y++) {
+      for (let x = 1; x < width - 1; x++) {
+        for (let c = 0; c < 3; c++) { // RGB channels only
+          let sum = 0;
+          for (let ky = -1; ky <= 1; ky++) {
+            for (let kx = -1; kx <= 1; kx++) {
+              const idx = ((y + ky) * width + (x + kx)) * 4 + c;
+              sum += data[idx] * kernel[(ky + 1) * 3 + (kx + 1)];
+            }
+          }
+          const idx = (y * width + x) * 4 + c;
+          newData[idx] = Math.min(255, Math.max(0, sum));
+        }
+      }
+    }
+    
+    return new ImageData(newData, width, height);
+  };
+
+  // Handle file selection with preprocessing
+  const handleFiles = async (files) => {
     const fileArray = Array.from(files);
     const imageFiles = fileArray.filter(file => 
       file.type.startsWith('image/') && file.size > 0
@@ -30,7 +139,14 @@ export default function ReceiptUpload() {
       alert(`${fileArray.length - imageFiles.length} non-image files were skipped`);
     }
 
-    uploadFiles(imageFiles);
+    // Preprocess images for better OCR accuracy
+    console.log('Starting image preprocessing for', imageFiles.length, 'files...');
+    const preprocessedFiles = await Promise.all(
+      imageFiles.map(file => preprocessImage(file))
+    );
+    console.log('Image preprocessing completed');
+
+    uploadFiles(preprocessedFiles);
   };
 
   // Upload files to Firebase Storage

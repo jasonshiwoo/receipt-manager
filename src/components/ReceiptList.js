@@ -3,6 +3,7 @@ import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, writeBat
 import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '../contexts/AuthContext';
 import { db, functions } from '../firebase';
+import ReceiptConfirmation from './ReceiptConfirmation';
 import './ReceiptList.css';
 
 export default function ReceiptList() {
@@ -21,6 +22,7 @@ export default function ReceiptList() {
   const [editingCategory, setEditingCategory] = useState(null);
   const [editCategoryValue, setEditCategoryValue] = useState('');
   const [updatingCategories, setUpdatingCategories] = useState(false);
+  const [confirmationReceipt, setConfirmationReceipt] = useState(null);
 
   useEffect(() => {
     if (!currentUser) {
@@ -51,6 +53,27 @@ export default function ReceiptList() {
               const bTime = b.createdAt?.toDate?.() || new Date(0);
               return bTime - aTime;
             });
+            
+            // Check for newly processed receipts that need confirmation
+            const newlyProcessedReceipts = receiptData.filter(receipt => 
+              receipt.status === 'processed' && 
+              receipt.extractedData && 
+              !receipt.userConfirmed &&
+              receipt.processedAt
+            );
+            
+            // Show confirmation for the most recent processed receipt
+            if (newlyProcessedReceipts.length > 0 && !confirmationReceipt) {
+              const mostRecent = newlyProcessedReceipts.sort((a, b) => {
+                const aTime = a.processedAt?.toDate?.() || new Date(0);
+                const bTime = b.processedAt?.toDate?.() || new Date(0);
+                return bTime - aTime;
+              })[0];
+              
+              console.log('Showing confirmation dialog for receipt:', mostRecent.id);
+              setConfirmationReceipt(mostRecent);
+            }
+            
             setReceipts(receiptData);
             setLoading(false);
             setError(null);
@@ -777,6 +800,21 @@ export default function ReceiptList() {
             </div>
           </div>
         </div>
+      )}
+      
+      {/* Receipt Confirmation Dialog */}
+      {confirmationReceipt && (
+        <ReceiptConfirmation
+          receipt={confirmationReceipt}
+          onClose={() => setConfirmationReceipt(null)}
+          onSave={(updatedReceipt) => {
+            // Update the receipt in the local state
+            setReceipts(prev => prev.map(r => 
+              r.id === updatedReceipt.id ? { ...r, ...updatedReceipt } : r
+            ));
+            setConfirmationReceipt(null);
+          }}
+        />
       )}
     </div>
   );

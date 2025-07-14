@@ -99,78 +99,263 @@ const MERCHANT_CATEGORIES = {
   'bank': 'Banking'
 };
 
-// Helper function to extract date from text
+// Helper function to extract date from text with enhanced patterns
 function extractDate(text) {
+  console.log('Extracting date from text...');
+  
   const datePatterns = [
-    // MM/DD/YYYY or MM-DD-YYYY
-    /\b(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})\b/g,
-    // DD/MM/YYYY or DD-MM-YYYY
-    /\b(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})\b/g,
+    // MM/DD/YYYY or MM-DD-YYYY (US format)
+    { pattern: /\b(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})\b/g, format: 'US' },
+    // DD/MM/YYYY or DD-MM-YYYY (European format)
+    { pattern: /\b(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})\b/g, format: 'EU' },
+    // YYYY-MM-DD (ISO format)
+    { pattern: /\b(\d{4})-(\d{1,2})-(\d{1,2})\b/g, format: 'ISO' },
     // Month DD, YYYY
-    /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{1,2}),?\s+(\d{4})\b/gi,
+    { pattern: /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s,]+(\d{1,2})[\s,]+(\d{4})\b/gi, format: 'MONTH_DAY_YEAR' },
     // DD Month YYYY
-    /\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})\b/gi
+    { pattern: /\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s,]+(\d{4})\b/gi, format: 'DAY_MONTH_YEAR' },
+    // MM.DD.YYYY or MM.DD.YY
+    { pattern: /\b(\d{1,2})\.(\d{1,2})\.(\d{2,4})\b/g, format: 'US_DOT' },
+    // YYYY/MM/DD
+    { pattern: /\b(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})\b/g, format: 'YEAR_FIRST' }
   ];
   
-  for (const pattern of datePatterns) {
-    const matches = text.match(pattern);
-    if (matches && matches.length > 0) {
+  const foundDates = [];
+  
+  for (const { pattern, format } of datePatterns) {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
       try {
-        const dateStr = matches[0];
-        const date = new Date(dateStr);
-        if (!isNaN(date.getTime())) {
-          return date.toISOString().split('T')[0]; // Return YYYY-MM-DD format
+        let dateStr = match[0];
+        let parsedDate;
+        
+        console.log(`Found potential date: "${dateStr}" (format: ${format})`);
+        
+        // Handle different date formats
+        if (format === 'US' || format === 'US_DOT') {
+          // MM/DD/YYYY format
+          parsedDate = new Date(dateStr.replace(/\./g, '/'));
+        } else if (format === 'EU') {
+          // DD/MM/YYYY - need to swap day and month
+          const parts = dateStr.split(/[\/-]/);
+          if (parts.length === 3) {
+            parsedDate = new Date(`${parts[1]}/${parts[0]}/${parts[2]}`);
+          }
+        } else if (format === 'ISO' || format === 'YEAR_FIRST') {
+          parsedDate = new Date(dateStr);
+        } else {
+          // Month name formats
+          parsedDate = new Date(dateStr);
+        }
+        
+        if (parsedDate && !isNaN(parsedDate.getTime())) {
+          // Validate date is reasonable (not too far in past/future)
+          const now = new Date();
+          const yearsDiff = Math.abs(now.getFullYear() - parsedDate.getFullYear());
+          
+          if (yearsDiff <= 10) { // Within 10 years
+            const isoDate = parsedDate.toISOString().split('T')[0];
+            foundDates.push({ date: isoDate, confidence: getDateConfidence(dateStr, format) });
+            console.log(`Valid date found: ${isoDate} (confidence: ${getDateConfidence(dateStr, format)})`);
+          }
         }
       } catch (e) {
+        console.log(`Error parsing date "${match[0]}": ${e.message}`);
         continue;
       }
     }
   }
+  
+  // Return the date with highest confidence
+  if (foundDates.length > 0) {
+    foundDates.sort((a, b) => b.confidence - a.confidence);
+    console.log(`Selected date: ${foundDates[0].date} (confidence: ${foundDates[0].confidence})`);
+    return foundDates[0].date;
+  }
+  
+  console.log('No valid date found');
   return null;
 }
 
-// Helper function to extract total amount
+// Helper function to determine date confidence
+function getDateConfidence(dateStr, format) {
+  let confidence = 50; // Base confidence
+  
+  // Higher confidence for more explicit formats
+  if (format === 'MONTH_DAY_YEAR' || format === 'DAY_MONTH_YEAR') confidence += 30;
+  if (format === 'ISO') confidence += 20;
+  if (dateStr.includes(',')) confidence += 10; // Comma usually indicates proper date formatting
+  
+  return confidence;
+}
+
+// Helper function to extract total amount with enhanced patterns
 function extractTotal(text) {
+  console.log('Extracting total amount from text...');
+  
   const totalPatterns = [
-    /total[:\s]*\$?([\d,]+\.\d{2})/gi,
-    /amount[:\s]*\$?([\d,]+\.\d{2})/gi,
-    /balance[:\s]*\$?([\d,]+\.\d{2})/gi,
-    /\$([\d,]+\.\d{2})\s*total/gi,
-    /grand\s*total[:\s]*\$?([\d,]+\.\d{2})/gi
+    // Standard total patterns
+    { pattern: /total[:\s]*\$?([\d,]+\.\d{2})/gi, priority: 90 },
+    { pattern: /grand[\s]*total[:\s]*\$?([\d,]+\.\d{2})/gi, priority: 95 },
+    { pattern: /final[\s]*total[:\s]*\$?([\d,]+\.\d{2})/gi, priority: 85 },
+    { pattern: /amount[\s]*due[:\s]*\$?([\d,]+\.\d{2})/gi, priority: 80 },
+    { pattern: /balance[:\s]*\$?([\d,]+\.\d{2})/gi, priority: 70 },
+    
+    // Currency symbol first patterns
+    { pattern: /\$([\d,]+\.\d{2})\s*total/gi, priority: 85 },
+    { pattern: /\$([\d,]+\.\d{2})\s*grand[\s]*total/gi, priority: 90 },
+    
+    // Line-based patterns (amount at end of line)
+    { pattern: /total.*?\$?([\d,]+\.\d{2})\s*$/gim, priority: 75 },
+    { pattern: /^.*total.*?\$?([\d,]+\.\d{2}).*$/gim, priority: 70 },
+    
+    // Subtotal + tax patterns (look for final amount)
+    { pattern: /(?:subtotal|sub[\s]*total)[:\s]*\$?([\d,]+\.\d{2})/gi, priority: 60 },
+    { pattern: /(?:tax|hst|gst|pst)[:\s]*\$?([\d,]+\.\d{2})/gi, priority: 50 },
+    
+    // Generic dollar amounts (lowest priority)
+    { pattern: /\$([\d,]+\.\d{2})/g, priority: 30 }
   ];
   
-  for (const pattern of totalPatterns) {
-    const matches = text.match(pattern);
-    if (matches && matches.length > 0) {
-      const amount = matches[0].match(/([\d,]+\.\d{2})/);
-      if (amount) {
-        return parseFloat(amount[1].replace(/,/g, ''));
+  const foundAmounts = [];
+  
+  for (const { pattern, priority } of totalPatterns) {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      const amountStr = match[1];
+      const amount = parseFloat(amountStr.replace(/,/g, ''));
+      
+      if (amount && amount > 0 && amount < 10000) { // Reasonable amount range
+        console.log(`Found potential amount: $${amount} (priority: ${priority}, context: "${match[0].trim()}")`);
+        foundAmounts.push({ amount, priority, context: match[0].trim() });
       }
     }
   }
+  
+  if (foundAmounts.length > 0) {
+    // Sort by priority (highest first), then by amount (highest first for same priority)
+    foundAmounts.sort((a, b) => {
+      if (a.priority !== b.priority) return b.priority - a.priority;
+      return b.amount - a.amount;
+    });
+    
+    const selectedAmount = foundAmounts[0];
+    console.log(`Selected amount: $${selectedAmount.amount} (priority: ${selectedAmount.priority}, context: "${selectedAmount.context}")`);
+    return selectedAmount.amount;
+  }
+  
+  console.log('No valid amount found');
   return null;
 }
 
-// Helper function to extract location (city, state)
+// Helper function to extract merchant name from top lines of receipt
+function extractMerchant(text) {
+  console.log('Extracting merchant name...');
+  
+  const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  
+  // Look at first few lines for merchant name
+  const potentialMerchants = [];
+  
+  for (let i = 0; i < Math.min(5, lines.length); i++) {
+    const line = lines[i];
+    
+    // Skip lines that are clearly not merchant names
+    if (/^\d+$/.test(line)) continue; // Pure numbers
+    if (/^[\d\s\-\/\.]+$/.test(line)) continue; // Dates/numbers only
+    if (line.length < 3) continue; // Too short
+    if (line.length > 50) continue; // Too long
+    if (/^(receipt|invoice|bill|order)$/i.test(line)) continue; // Generic terms
+    
+    // Higher priority for lines with common business indicators
+    let priority = 50;
+    if (/\b(inc|llc|corp|ltd|co\.|company)\b/i.test(line)) priority += 30;
+    if (/\b(store|shop|market|restaurant|cafe|bar|grill)\b/i.test(line)) priority += 20;
+    if (i === 0) priority += 20; // First line bonus
+    if (i === 1) priority += 10; // Second line bonus
+    
+    potentialMerchants.push({ name: line, priority, lineIndex: i });
+    console.log(`Potential merchant: "${line}" (line ${i}, priority: ${priority})`);
+  }
+  
+  if (potentialMerchants.length > 0) {
+    potentialMerchants.sort((a, b) => b.priority - a.priority);
+    const selectedMerchant = potentialMerchants[0];
+    console.log(`Selected merchant: "${selectedMerchant.name}" (priority: ${selectedMerchant.priority})`);
+    return selectedMerchant.name;
+  }
+  
+  console.log('No merchant name found');
+  return null;
+}
+
+// Helper function to extract location (city, state) with enhanced patterns
 function extractLocation(text) {
-  // Look for city, state patterns
+  console.log('Extracting location...');
+  
   const locationPatterns = [
-    /([A-Za-z\s]+),\s*([A-Z]{2})\s*\d{5}/g, // City, ST 12345
-    /([A-Za-z\s]+),\s*([A-Z]{2})/g, // City, ST
-    /([A-Za-z\s]+)\s+([A-Z]{2})\s*\d{5}/g // City ST 12345
+    // Full address patterns
+    { pattern: /([A-Za-z\s]+),\s*([A-Z]{2})\s*(\d{5}(?:-\d{4})?)/g, priority: 90 }, // City, ST 12345-6789
+    { pattern: /([A-Za-z\s]+),\s*([A-Z]{2})\s+(\d{5})/g, priority: 85 }, // City, ST 12345
+    { pattern: /([A-Za-z\s]+)\s+([A-Z]{2})\s+(\d{5})/g, priority: 80 }, // City ST 12345
+    
+    // City, State without ZIP
+    { pattern: /([A-Za-z\s]{3,}),\s*([A-Z]{2})(?!\d)/g, priority: 70 }, // City, ST
+    { pattern: /([A-Za-z\s]{3,})\s+([A-Z]{2})(?!\d)/g, priority: 65 }, // City ST
+    
+    // Address line patterns
+    { pattern: /(\d+\s+[A-Za-z\s]+),\s*([A-Za-z\s]+),\s*([A-Z]{2})/g, priority: 75 }, // 123 Main St, City, ST
+    { pattern: /(\d+\s+[A-Za-z\s]+)\s+([A-Za-z\s]+)\s+([A-Z]{2})\s+(\d{5})/g, priority: 85 } // 123 Main St City ST 12345
   ];
   
-  for (const pattern of locationPatterns) {
-    const matches = [...text.matchAll(pattern)];
-    if (matches.length > 0) {
-      const match = matches[0];
-      return {
-        city: match[1].trim(),
-        state: match[2].trim(),
-        full: `${match[1].trim()}, ${match[2].trim()}`
-      };
+  const foundLocations = [];
+  
+  for (const { pattern, priority } of locationPatterns) {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      let city, state, zip, address;
+      
+      if (match.length === 4 && /\d{5}/.test(match[3])) {
+        // City, ST ZIP
+        city = match[1].trim();
+        state = match[2].trim();
+        zip = match[3].trim();
+      } else if (match.length === 3) {
+        // City, ST
+        city = match[1].trim();
+        state = match[2].trim();
+      } else if (match.length === 5) {
+        // Address City ST ZIP
+        address = match[1].trim();
+        city = match[2].trim();
+        state = match[3].trim();
+        zip = match[4].trim();
+      }
+      
+      if (city && state && city.length >= 3 && /^[A-Z]{2}$/.test(state)) {
+        const location = {
+          city: city,
+          state: state,
+          full: `${city}, ${state}${zip ? ' ' + zip : ''}`
+        };
+        
+        if (address) location.address = address;
+        if (zip) location.zip = zip;
+        
+        foundLocations.push({ location, priority, context: match[0] });
+        console.log(`Found location: ${location.full} (priority: ${priority}, context: "${match[0]}")`);
+      }
     }
   }
+  
+  if (foundLocations.length > 0) {
+    foundLocations.sort((a, b) => b.priority - a.priority);
+    const selectedLocation = foundLocations[0];
+    console.log(`Selected location: ${selectedLocation.location.full} (priority: ${selectedLocation.priority})`);
+    return selectedLocation.location;
+  }
+  
+  console.log('No location found');
   return null;
 }
 
@@ -246,24 +431,45 @@ exports.processReceipt = functions.https.onCall(async (data, context) => {
     const userData = userDoc.exists ? userDoc.data() : {};
     const userDefaultLocation = userData.defaultLocation || null;
 
-    // Perform OCR using Google Cloud Vision
-    console.log('Performing OCR on image:', imageUrl);
-    const [result] = await visionClient.textDetection(imageUrl);
-    const detections = result.textAnnotations;
+    // Perform OCR using Google Cloud Vision with DOCUMENT_TEXT_DETECTION for better accuracy
+    console.log('Performing enhanced OCR on image:', imageUrl);
+    const [result] = await visionClient.documentTextDetection(imageUrl);
     
-    if (!detections || detections.length === 0) {
+    if (!result.fullTextAnnotation) {
       throw new functions.https.HttpsError('not-found', 'No text found in the image');
     }
 
-    // Extract the full text
-    const fullText = detections[0].description;
-    console.log('Extracted text:', fullText);
+    // Extract the full text and structured data
+    const fullText = result.fullTextAnnotation.text;
+    const pages = result.fullTextAnnotation.pages || [];
+    const blocks = pages.flatMap(page => page.blocks || []);
+    const paragraphs = blocks.flatMap(block => block.paragraphs || []);
+    const words = paragraphs.flatMap(paragraph => paragraph.words || []);
+    
+    console.log('=== OCR EXTRACTION RESULTS ===');
+    console.log('Full text length:', fullText.length);
+    console.log('Number of blocks:', blocks.length);
+    console.log('Number of paragraphs:', paragraphs.length);
+    console.log('Number of words:', words.length);
+    console.log('Raw extracted text:');
+    console.log(fullText);
+    console.log('=== END OCR RESULTS ===');
 
-    // Intelligent data extraction
+    // Intelligent data extraction with enhanced logging
+    console.log('=== STARTING DATA EXTRACTION ===');
     const extractedDate = extractDate(fullText);
     const extractedTotal = extractTotal(fullText);
+    const extractedMerchant = extractMerchant(fullText);
     const extractedLocation = extractLocation(fullText);
     const suggestedCategory = suggestCategory(fullText);
+    
+    console.log('=== EXTRACTION SUMMARY ===');
+    console.log('Date:', extractedDate);
+    console.log('Total:', extractedTotal);
+    console.log('Merchant:', extractedMerchant);
+    console.log('Location:', extractedLocation);
+    console.log('Category:', suggestedCategory);
+    console.log('=== END EXTRACTION SUMMARY ===');
     
     // Determine if this might be a trip (location different from user's default)
     let isPotentialTrip = false;
@@ -281,12 +487,19 @@ exports.processReceipt = functions.https.onCall(async (data, context) => {
       rawText: fullText,
       date: extractedDate,
       total: extractedTotal,
+      merchant: extractedMerchant,
       location: extractedLocation,
       suggestedCategory: suggestedCategory,
       isPotentialTrip: isPotentialTrip,
       userDefaultLocation: userDefaultLocation,
       lines: fullText.split('\n').filter(line => line.trim().length > 0),
-      extractedAt: new Date().toISOString()
+      extractedAt: new Date().toISOString(),
+      ocrMethod: 'DOCUMENT_TEXT_DETECTION',
+      structuredData: {
+        blocks: blocks.length,
+        paragraphs: paragraphs.length,
+        words: words.length
+      }
     };
 
     // Update the receipt document with extracted data
@@ -300,6 +513,7 @@ exports.processReceipt = functions.https.onCall(async (data, context) => {
     // Add extracted fields to the main receipt document
     if (extractedDate) updateData.date = extractedDate;
     if (extractedTotal) updateData.total = extractedTotal;
+    if (extractedMerchant) updateData.merchant = extractedMerchant;
     if (extractedLocation) updateData.location = extractedLocation;
     if (suggestedCategory) updateData.suggestedCategory = suggestedCategory;
     
@@ -309,6 +523,7 @@ exports.processReceipt = functions.https.onCall(async (data, context) => {
       receiptId,
       date: extractedDate,
       total: extractedTotal,
+      merchant: extractedMerchant,
       location: extractedLocation?.full,
       category: suggestedCategory,
       isPotentialTrip
