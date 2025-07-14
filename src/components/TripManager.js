@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '../firebase';
 import './TripManager.css';
@@ -66,19 +65,26 @@ const TripManager = () => {
       return;
     }
 
+    if (!user) {
+      setError('You must be logged in to create a trip');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      const functions = getFunctions();
-      const createTripFunction = httpsCallable(functions, 'createTrip');
-      
-      await createTripFunction({
+      const tripData = {
         name: newTrip.name,
-        startDate: newTrip.startDate,
-        endDate: newTrip.endDate,
-        location: newTrip.location
-      });
+        startDate: new Date(newTrip.startDate),
+        endDate: new Date(newTrip.endDate),
+        location: newTrip.location || '',
+        userId: user.uid,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+
+      await addDoc(collection(db, `users/${user.uid}/trips`), tripData);
 
       setNewTrip({ name: '', startDate: '', endDate: '', location: '' });
       setShowCreateForm(false);
@@ -91,17 +97,20 @@ const TripManager = () => {
   };
 
   const handleAssignReceipt = async (receiptId, tripId, tripName) => {
+    if (!user) {
+      setError('You must be logged in to assign receipts');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      const functions = getFunctions();
-      const assignReceiptFunction = httpsCallable(functions, 'assignReceiptToTrip');
-      
-      await assignReceiptFunction({
-        receiptId,
-        tripId,
-        tripName
+      const receiptRef = doc(db, 'receipts', receiptId);
+      await updateDoc(receiptRef, {
+        tripId: tripId,
+        tripName: tripName,
+        updatedAt: serverTimestamp()
       });
     } catch (error) {
       console.error('Error assigning receipt to trip:', error);

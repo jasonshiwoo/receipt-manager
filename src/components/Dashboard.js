@@ -5,6 +5,7 @@ import ReceiptList from './ReceiptList';
 import TripManager from './TripManager';
 import SpendingTrends from './SpendingTrends';
 import CategoryBreakdown from './CategoryBreakdown';
+import TripExpenses from './TripExpenses';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -35,12 +36,9 @@ export default function Dashboard() {
             
             <CategoryBreakdown />
             
+            <TripExpenses />
+            
             <div className="features-grid">
-              <div className="feature-card">
-                <h3>✈️ Trip Expenses</h3>
-                <p>Analyze costs for each trip</p>
-                <span className="coming-soon">Coming Soon</span>
-              </div>
               <div className="feature-card">
                 <h3>📋 Export Reports</h3>
                 <p>Generate reports for expense reimbursement</p>
