@@ -8,10 +8,8 @@ const ReceiptConfirmationForm = ({ receiptId, extractedData, onComplete, onCance
   const [formData, setFormData] = useState({
     date: extractedData?.date || '',
     total: extractedData?.total || '',
-    location: extractedData?.location || '',
     category: extractedData?.category || 'Other',
-    notes: '',
-    merchant: ''
+    description: ''
   });
   
   const [tripData, setTripData] = useState({
@@ -118,8 +116,7 @@ const ReceiptConfirmationForm = ({ receiptId, extractedData, onComplete, onCance
         const tripResponse = await createTripFunction({
           name: tripData.tripName,
           startDate: tripData.startDate,
-          endDate: tripData.endDate,
-          location: formData.location
+          endDate: tripData.endDate
         });
         
         // Assign receipt to trip
@@ -158,17 +155,7 @@ const ReceiptConfirmationForm = ({ receiptId, extractedData, onComplete, onCance
         <div className="trip-prompt">
           <div className="prompt-header">
             <h3>✈️ Trip Detected</h3>
-            <p>This receipt appears to be from outside your usual location:</p>
-            <div className="location-comparison">
-              <div className="receipt-location">
-                <strong>Receipt Location:</strong> {typeof extractedData?.location === 'string' ? extractedData.location : extractedData?.location?.full || 'Unknown'}
-              </div>
-              {extractedData?.userDefaultLocation && (
-                <div className="user-location">
-                  <strong>Your Default Location:</strong> {extractedData.userDefaultLocation.city}, {extractedData.userDefaultLocation.state}
-                </div>
-              )}
-            </div>
+            <p>This receipt appears to be from a trip location.</p>
           </div>
           
           <div className="prompt-question">
@@ -224,25 +211,7 @@ const ReceiptConfirmationForm = ({ receiptId, extractedData, onComplete, onCance
             />
           </div>
           
-          <div className="form-group">
-            <label>Merchant/Location</label>
-            <input
-              type="text"
-              value={formData.merchant}
-              onChange={(e) => handleInputChange('merchant', e.target.value)}
-              placeholder="Store or restaurant name"
-            />
-          </div>
-          
-          <div className="form-group">
-            <label>Location</label>
-            <input
-              type="text"
-              value={formData.location}
-              onChange={(e) => handleInputChange('location', e.target.value)}
-              placeholder="City, State"
-            />
-          </div>
+
           
           <div className="form-group">
             <label>Category</label>
@@ -257,11 +226,11 @@ const ReceiptConfirmationForm = ({ receiptId, extractedData, onComplete, onCance
           </div>
           
           <div className="form-group">
-            <label>Notes (Optional)</label>
+            <label>Description (Optional)</label>
             <textarea
-              value={formData.notes}
-              onChange={(e) => handleInputChange('notes', e.target.value)}
-              placeholder="Add any additional notes about this receipt..."
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              placeholder="Add a description for this receipt..."
               rows={3}
             />
           </div>
@@ -309,7 +278,7 @@ const ReceiptConfirmationForm = ({ receiptId, extractedData, onComplete, onCance
                   {suggestedReceipts.map(receipt => (
                     <div key={receipt.id} className="suggested-receipt">
                       <span className="receipt-info">
-                        {receipt.date} - ${receipt.total?.toFixed(2) || '0.00'} - {typeof receipt.location === 'string' ? receipt.location : receipt.location?.full || 'Unknown location'}
+                        {receipt.date} - ${receipt.total?.toFixed(2) || '0.00'} - {receipt.category || 'Other'}
                       </span>
                       <input type="checkbox" defaultChecked />
                     </div>

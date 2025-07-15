@@ -531,21 +531,7 @@ export default function ReceiptUpload() {
                   <div className="error-message">{upload.error}</div>
                 )}
                 
-                {upload.status === 'ocr-completed' && upload.ocrData && (
-                  <div className="ocr-summary">
-                    <div className="ocr-data">
-                      {upload.ocrData.extractedData?.total && (
-                        <span className="ocr-item">💰 ${upload.ocrData.extractedData.total}</span>
-                      )}
-                      {upload.ocrData.extractedData?.date && (
-                        <span className="ocr-item">📅 {upload.ocrData.extractedData.date}</span>
-                      )}
-                      {upload.ocrData.extractedData?.location && (
-                        <span className="ocr-item">📍 {typeof upload.ocrData.extractedData.location === 'string' ? upload.ocrData.extractedData.location : upload.ocrData.extractedData.location?.full || 'Unknown'}</span>
-                      )}
-                    </div>
-                  </div>
-                )}
+
               </div>
             ))}
           </div>
