@@ -23,6 +23,7 @@ export default function ReceiptList() {
   const [editCategoryValue, setEditCategoryValue] = useState('');
   const [updatingCategories, setUpdatingCategories] = useState(false);
   const [confirmationReceipt, setConfirmationReceipt] = useState(null);
+  const [showReceipts, setShowReceipts] = useState(false);
 
   useEffect(() => {
     if (!currentUser) {
@@ -444,17 +445,23 @@ export default function ReceiptList() {
 
   return (
     <div className="receipt-list">
-      <div className="receipt-list-header">
-        <h3>📄 Your Receipts</h3>
-        <p>
-          {receipts.length === 0 
-            ? 'No receipts uploaded yet. Use the camera above to get started!' 
-            : `${receipts.length} receipt${receipts.length !== 1 ? 's' : ''} found`
-          }
-        </p>
+      <div 
+        className="receipt-list-header clickable-header" 
+        onClick={() => setShowReceipts(!showReceipts)}
+        style={{ cursor: 'pointer' }}
+      >
+        <div className="header-content">
+          <h3>📄 Your Receipts {showReceipts ? '▼' : '▶'}</h3>
+          <p>
+            {receipts.length === 0 
+              ? 'No receipts uploaded yet. Use the camera above to get started!' 
+              : `${receipts.length} receipt${receipts.length !== 1 ? 's' : ''} found - Click to ${showReceipts ? 'hide' : 'show'}`
+            }
+          </p>
+        </div>
       </div>
 
-      {receipts.length > 0 && (
+      {receipts.length > 0 && showReceipts && (
         <div className="receipt-grid">
           {receipts.map((receipt) => (
             <div key={receipt.id} className="receipt-card" onClick={() => handleEditReceipt(receipt)}>

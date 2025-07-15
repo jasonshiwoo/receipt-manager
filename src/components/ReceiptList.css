@@ -10,17 +10,42 @@
   margin-bottom: 24px;
 }
 
+.receipt-list-header.clickable-header {
+  padding: 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.receipt-list-header.clickable-header:hover {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.receipt-list-header.clickable-header:active {
+  transform: translateY(0);
+}
+
 .receipt-list-header h3 {
   margin: 0 0 8px 0;
   color: #1f2937;
   font-size: 20px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .receipt-list-header p {
   margin: 0;
   color: #6b7280;
   font-size: 14px;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
 }
 
 .error-message {
