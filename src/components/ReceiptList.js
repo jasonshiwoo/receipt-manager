@@ -25,6 +25,44 @@ export default function ReceiptList() {
   const [confirmationReceipt, setConfirmationReceipt] = useState(null);
   const [showReceipts, setShowReceipts] = useState(false);
 
+  // Reusable function to sort receipts by receipt date (most recent first)
+  const sortReceiptsByDate = (receipts) => {
+    return receipts.sort((a, b) => {
+      // Parse receipt dates (format: YYYY-MM-DD or MM/DD/YYYY)
+      const parseReceiptDate = (dateStr) => {
+        if (!dateStr) return new Date(0); // Default to epoch if no date
+        
+        // Try parsing different date formats
+        let parsedDate;
+        if (dateStr.includes('/')) {
+          // Handle MM/DD/YYYY format
+          parsedDate = new Date(dateStr);
+        } else if (dateStr.includes('-')) {
+          // Handle YYYY-MM-DD format
+          parsedDate = new Date(dateStr);
+        } else {
+          // Try direct parsing
+          parsedDate = new Date(dateStr);
+        }
+        
+        // If parsing failed, fallback to upload date
+        return isNaN(parsedDate.getTime()) ? (a.createdAt?.toDate?.() || new Date(0)) : parsedDate;
+      };
+      
+      const aDate = parseReceiptDate(a.date);
+      const bDate = parseReceiptDate(b.date);
+      
+      // Sort by receipt date (most recent first), fallback to upload date if receipt dates are equal
+      if (aDate.getTime() === bDate.getTime()) {
+        const aUpload = a.createdAt?.toDate?.() || new Date(0);
+        const bUpload = b.createdAt?.toDate?.() || new Date(0);
+        return bUpload - aUpload;
+      }
+      
+      return bDate - aDate;
+    });
+  };
+
   useEffect(() => {
     if (!currentUser) {
       setLoading(false);
@@ -48,12 +86,8 @@ export default function ReceiptList() {
               id: doc.id,
               ...doc.data()
             }));
-            // Sort by createdAt on client side as backup
-            receiptData.sort((a, b) => {
-              const aTime = a.createdAt?.toDate?.() || new Date(0);
-              const bTime = b.createdAt?.toDate?.() || new Date(0);
-              return bTime - aTime;
-            });
+            // Sort by receipt date (most recent first)
+            sortReceiptsByDate(receiptData);
             
             // Check for newly processed receipts that need confirmation
             const newlyProcessedReceipts = receiptData.filter(receipt => 
@@ -108,12 +142,8 @@ export default function ReceiptList() {
               id: doc.id,
               ...doc.data()
             }));
-            // Sort by createdAt on client side
-            receiptData.sort((a, b) => {
-              const aTime = a.createdAt?.toDate?.() || new Date(0);
-              const bTime = b.createdAt?.toDate?.() || new Date(0);
-              return bTime - aTime;
-            });
+            // Sort by receipt date (most recent first)
+            sortReceiptsByDate(receiptData);
             setReceipts(receiptData);
             setLoading(false);
             setError(null);
