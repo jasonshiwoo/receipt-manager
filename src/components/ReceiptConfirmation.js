@@ -5,23 +5,18 @@ import './ReceiptConfirmation.css';
 
 export default function ReceiptConfirmation({ receipt, onClose, onSave }) {
   const [formData, setFormData] = useState({
-    merchant: '',
     date: '',
     total: '',
-    location: '',
     category: '',
     description: ''
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [showRawText, setShowRawText] = useState(false);
 
   useEffect(() => {
     if (receipt) {
       setFormData({
-        merchant: receipt.merchant || receipt.extractedData?.merchant || '',
         date: receipt.date || '',
         total: receipt.total || '',
-        location: receipt.location?.full || receipt.location || '',
         category: receipt.suggestedCategory || receipt.category || 'Other',
         description: receipt.description || ''
       });
@@ -39,10 +34,8 @@ export default function ReceiptConfirmation({ receipt, onClose, onSave }) {
     setIsLoading(true);
     try {
       const updateData = {
-        merchant: formData.merchant,
         date: formData.date,
         total: parseFloat(formData.total) || 0,
-        location: formData.location,
         category: formData.category,
         description: formData.description,
         userConfirmed: true,
@@ -87,43 +80,11 @@ export default function ReceiptConfirmation({ receipt, onClose, onSave }) {
         </div>
 
         <div className="confirmation-content">
-          {/* OCR Extraction Results */}
-          <div className="extraction-summary">
-            <h3>🔍 OCR Extraction Results</h3>
-            <div className="extraction-stats">
-              <span>✅ Date: {receipt.extractedData?.date ? 'Found' : 'Not found'}</span>
-              <span>✅ Amount: {receipt.extractedData?.total ? 'Found' : 'Not found'}</span>
-              <span>✅ Merchant: {receipt.extractedData?.merchant ? 'Found' : 'Not found'}</span>
-              <span>✅ Location: {receipt.extractedData?.location ? 'Found' : 'Not found'}</span>
-            </div>
-            
-            <button 
-              className="toggle-raw-text"
-              onClick={() => setShowRawText(!showRawText)}
-            >
-              {showRawText ? '🔼 Hide' : '🔽 Show'} Raw OCR Text
-            </button>
-            
-            {showRawText && (
-              <div className="raw-text-display">
-                <pre>{receipt.extractedText || 'No raw text available'}</pre>
-              </div>
-            )}
-          </div>
+
 
           {/* Editable Form */}
           <div className="confirmation-form">
             <div className="form-row">
-              <div className="form-group">
-                <label>🏪 Merchant Name</label>
-                <input
-                  type="text"
-                  value={formData.merchant}
-                  onChange={(e) => handleInputChange('merchant', e.target.value)}
-                  placeholder="Enter merchant name"
-                />
-              </div>
-              
               <div className="form-group">
                 <label>📅 Date</label>
                 <input
@@ -159,15 +120,7 @@ export default function ReceiptConfirmation({ receipt, onClose, onSave }) {
               </div>
             </div>
 
-            <div className="form-group">
-              <label>📍 Location</label>
-              <input
-                type="text"
-                value={formData.location}
-                onChange={(e) => handleInputChange('location', e.target.value)}
-                placeholder="City, State or full address"
-              />
-            </div>
+
 
             <div className="form-group">
               <label>📝 Description (Optional)</label>
