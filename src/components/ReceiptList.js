@@ -476,7 +476,7 @@ export default function ReceiptList() {
                 </div>
                 
                 {/* Display OCR data if available */}
-                {(receipt.total || receipt.date || receipt.category) && (
+                {(receipt.total || receipt.date || receipt.category || receipt.description) && (
                   <div className="receipt-ocr-data">
                     <div className="ocr-header">
                       <span className="ocr-badge">✅ Processed</span>
@@ -500,12 +500,18 @@ export default function ReceiptList() {
                           <span className="ocr-value">{receipt.category}</span>
                         </div>
                       )}
+                      {receipt.description && (
+                        <div className="ocr-item">
+                          <span className="ocr-label">📝</span>
+                          <span className="ocr-value">{receipt.description}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
                 
                 {/* Show processing status if no OCR data yet */}
-                {!(receipt.total || receipt.date || receipt.category) && (
+                {!(receipt.total || receipt.date || receipt.category || receipt.description) && (
                   <div className="receipt-status">
                     <span className="status-badge processing">🔍 Processing...</span>
                   </div>
