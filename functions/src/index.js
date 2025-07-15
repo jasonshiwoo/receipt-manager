@@ -397,27 +397,57 @@ function extractLocation(text) {
   return null;
 }
 
-// Helper function to suggest category based on merchant/text
+// Enhanced function to suggest category based on merchant name and receipt text
 function suggestCategory(text) {
-  const lowerText = text.toLowerCase();
+  if (!text) return 'Other';
   
+  const lowerText = text.toLowerCase();
+  console.log('Analyzing text for category suggestion:', lowerText.substring(0, 100) + '...');
+  
+  // First, check for exact merchant matches (highest priority)
   for (const [keyword, category] of Object.entries(MERCHANT_CATEGORIES)) {
     if (lowerText.includes(keyword)) {
+      console.log(`Found merchant keyword '${keyword}' -> category '${category}'`);
       return category;
     }
   }
   
-  // Default fallback categories based on common patterns
-  if (lowerText.includes('food') || lowerText.includes('restaurant') || lowerText.includes('dining')) {
-    return 'Food & Drink';
-  }
-  if (lowerText.includes('gas') || lowerText.includes('fuel')) {
-    return 'Transportation';
-  }
-  if (lowerText.includes('store') || lowerText.includes('shop')) {
-    return 'Shopping';
+  // Enhanced pattern matching for common receipt patterns
+  const patterns = [
+    // Food & Dining patterns
+    { regex: /\b(restaurant|cafe|coffee|food|dining|pizza|burger|taco|sushi|thai|chinese|mexican|italian)\b/i, category: 'Food & Drink' },
+    { regex: /\b(bar|pub|brewery|wine|beer|cocktail)\b/i, category: 'Food & Drink' },
+    
+    // Transportation patterns
+    { regex: /\b(gas|fuel|gasoline|station|shell|chevron|exxon|mobil|bp)\b/i, category: 'Transportation' },
+    { regex: /\b(uber|lyft|taxi|cab|parking|toll)\b/i, category: 'Transportation' },
+    
+    // Shopping patterns
+    { regex: /\b(walmart|target|costco|amazon|store|shop|retail|mall)\b/i, category: 'Shopping' },
+    { regex: /\b(grocery|supermarket|market|safeway|kroger|whole foods)\b/i, category: 'Groceries' },
+    
+    // Healthcare patterns
+    { regex: /\b(pharmacy|cvs|walgreens|hospital|clinic|doctor|medical|health)\b/i, category: 'Healthcare' },
+    
+    // Utilities patterns
+    { regex: /\b(electric|electricity|water|gas bill|internet|phone|utility)\b/i, category: 'Utilities' },
+    
+    // Entertainment patterns
+    { regex: /\b(movie|theater|cinema|netflix|spotify|entertainment|game)\b/i, category: 'Entertainment' },
+    
+    // Travel patterns
+    { regex: /\b(hotel|motel|inn|resort|airline|airport|travel|booking)\b/i, category: 'Travel' }
+  ];
+  
+  // Check patterns in order of specificity
+  for (const pattern of patterns) {
+    if (pattern.regex.test(lowerText)) {
+      console.log(`Matched pattern '${pattern.regex}' -> category '${pattern.category}'`);
+      return pattern.category;
+    }
   }
   
+  console.log('No category match found, defaulting to Other');
   return 'Other';
 }
 
@@ -464,10 +494,7 @@ exports.processReceipt = functions.https.onCall(async (data, context) => {
       throw new functions.https.HttpsError('permission-denied', 'Access denied');
     }
 
-    // Get user's default location for trip detection
-    const userDoc = await db.collection('users').doc(userId).get();
-    const userData = userDoc.exists ? userDoc.data() : {};
-    const userDefaultLocation = userData.defaultLocation || null;
+    // No need for user location data since we're not storing location
 
     // Perform OCR using Google Cloud Vision with DOCUMENT_TEXT_DETECTION for better accuracy
     console.log('Performing enhanced OCR on image:', imageUrl);
@@ -497,62 +524,39 @@ exports.processReceipt = functions.https.onCall(async (data, context) => {
     console.log('=== STARTING DATA EXTRACTION ===');
     const extractedDate = extractDate(fullText);
     const extractedTotal = extractTotal(fullText);
-    const extractedMerchant = extractMerchant(fullText);
-    const extractedLocation = extractLocation(fullText);
-    const suggestedCategory = suggestCategory(fullText);
+    const extractedMerchant = extractMerchant(fullText); // Used only for category suggestion
+    
+    // Use merchant name to suggest category, but don't store merchant or location
+    const merchantBasedCategory = extractedMerchant ? suggestCategory(extractedMerchant) : null;
+    const textBasedCategory = suggestCategory(fullText);
+    const suggestedCategory = merchantBasedCategory || textBasedCategory;
     
     console.log('=== EXTRACTION SUMMARY ===');
     console.log('Date:', extractedDate);
     console.log('Total:', extractedTotal);
-    console.log('Merchant:', extractedMerchant);
-    console.log('Location:', extractedLocation);
-    console.log('Category:', suggestedCategory);
+    console.log('Merchant (for category only):', extractedMerchant);
+    console.log('Suggested Category:', suggestedCategory);
     console.log('=== END EXTRACTION SUMMARY ===');
-    
-    // Determine if this might be a trip (location different from user's default)
-    let isPotentialTrip = false;
-    if (extractedLocation && userDefaultLocation) {
-      const receiptCity = extractedLocation.city.toLowerCase();
-      const receiptState = extractedLocation.state.toLowerCase();
-      const userCity = userDefaultLocation.city ? userDefaultLocation.city.toLowerCase() : '';
-      const userState = userDefaultLocation.state ? userDefaultLocation.state.toLowerCase() : '';
-      
-      isPotentialTrip = (receiptCity !== userCity || receiptState !== userState);
-    }
 
-    // Parse and extract structured data
+    // Parse and extract structured data (simplified - only store essential fields)
     const extractedData = {
-      rawText: fullText,
       date: extractedDate,
       total: extractedTotal,
-      merchant: extractedMerchant,
-      location: extractedLocation,
       suggestedCategory: suggestedCategory,
-      isPotentialTrip: isPotentialTrip,
-      userDefaultLocation: userDefaultLocation,
-      lines: fullText.split('\n').filter(line => line.trim().length > 0),
       extractedAt: new Date().toISOString(),
-      ocrMethod: 'DOCUMENT_TEXT_DETECTION',
-      structuredData: {
-        blocks: blocks.length,
-        paragraphs: paragraphs.length,
-        words: words.length
-      }
+      ocrMethod: 'DOCUMENT_TEXT_DETECTION'
     };
 
-    // Update the receipt document with extracted data
+    // Update the receipt document with extracted data (only essential fields)
     const updateData = {
-      extractedText: fullText,
       extractedData: extractedData,
       processedAt: admin.firestore.FieldValue.serverTimestamp(),
       status: 'processed'
     };
 
-    // Add extracted fields to the main receipt document
+    // Add only essential extracted fields to the main receipt document
     if (extractedDate) updateData.date = extractedDate;
     if (extractedTotal) updateData.total = extractedTotal;
-    if (extractedMerchant) updateData.merchant = extractedMerchant;
-    if (extractedLocation) updateData.location = extractedLocation;
     if (suggestedCategory) updateData.suggestedCategory = suggestedCategory;
     
     await db.collection('receipts').doc(receiptId).update(updateData);
@@ -561,15 +565,11 @@ exports.processReceipt = functions.https.onCall(async (data, context) => {
       receiptId,
       date: extractedDate,
       total: extractedTotal,
-      merchant: extractedMerchant,
-      location: extractedLocation?.full,
-      category: suggestedCategory,
-      isPotentialTrip
+      category: suggestedCategory
     });
 
     return {
       success: true,
-      extractedText: fullText,
       extractedData: extractedData,
       receiptId: receiptId
     };
