@@ -101,80 +101,118 @@ const MERCHANT_CATEGORIES = {
 
 // Helper function to extract date from text with enhanced patterns
 function extractDate(text) {
-  console.log('Extracting date from text...');
+  console.log('=== DATE EXTRACTION START ===');
+  console.log('Input text length:', text.length);
   
+  // Enhanced date patterns with better regex for receipt formats
   const datePatterns = [
-    // MM/DD/YYYY or MM-DD-YYYY (US format)
-    { pattern: /\b(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})\b/g, format: 'US' },
+    // MM/DD/YYYY or MM-DD-YYYY (most common US format)
+    { pattern: /\b(0?[1-9]|1[0-2])[\/\-\.](0?[1-9]|[12]\d|3[01])[\/\-\.](20\d{2}|\d{2})\b/g, format: 'MM/DD/YYYY', priority: 10 },
     // DD/MM/YYYY or DD-MM-YYYY (European format)
-    { pattern: /\b(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})\b/g, format: 'EU' },
+    { pattern: /\b(0?[1-9]|[12]\d|3[01])[\/\-\.](0?[1-9]|1[0-2])[\/\-\.](20\d{2}|\d{2})\b/g, format: 'DD/MM/YYYY', priority: 8 },
+    // Month DD, YYYY (e.g., "Jan 15, 2024")
+    { pattern: /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+(0?[1-9]|[12]\d|3[01]),?\s+(20\d{2}|\d{2})\b/gi, format: 'Month DD, YYYY', priority: 9 },
+    // DD Month YYYY (e.g., "15 Jan 2024")
+    { pattern: /\b(0?[1-9]|[12]\d|3[01])\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s+(20\d{2}|\d{2})\b/gi, format: 'DD Month YYYY', priority: 7 },
     // YYYY-MM-DD (ISO format)
-    { pattern: /\b(\d{4})-(\d{1,2})-(\d{1,2})\b/g, format: 'ISO' },
-    // Month DD, YYYY
-    { pattern: /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s,]+(\d{1,2})[\s,]+(\d{4})\b/gi, format: 'MONTH_DAY_YEAR' },
-    // DD Month YYYY
-    { pattern: /\b(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s,]+(\d{4})\b/gi, format: 'DAY_MONTH_YEAR' },
-    // MM.DD.YYYY or MM.DD.YY
-    { pattern: /\b(\d{1,2})\.(\d{1,2})\.(\d{2,4})\b/g, format: 'US_DOT' },
-    // YYYY/MM/DD
-    { pattern: /\b(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})\b/g, format: 'YEAR_FIRST' }
+    { pattern: /\b(20\d{2})-(0?[1-9]|1[0-2])-(0?[1-9]|[12]\d|3[01])\b/g, format: 'YYYY-MM-DD', priority: 6 },
+    // Time-based patterns (look for dates near time stamps)
+    { pattern: /\b(0?[1-9]|1[0-2])[\/\-](0?[1-9]|[12]\d|3[01])[\/\-](20\d{2}|\d{2})\s*\d{1,2}:\d{2}/g, format: 'MM/DD/YYYY with time', priority: 12 }
   ];
   
-  const foundDates = [];
+  const monthNames = {
+    'jan': '01', 'january': '01', 'feb': '02', 'february': '02', 'mar': '03', 'march': '03',
+    'apr': '04', 'april': '04', 'may': '05', 'jun': '06', 'june': '06',
+    'jul': '07', 'july': '07', 'aug': '08', 'august': '08', 'sep': '09', 'september': '09',
+    'oct': '10', 'october': '10', 'nov': '11', 'november': '11', 'dec': '12', 'december': '12'
+  };
   
-  for (const { pattern, format } of datePatterns) {
-    let match;
-    while ((match = pattern.exec(text)) !== null) {
+  let bestDate = null;
+  let bestScore = 0;
+  let allMatches = [];
+  
+  // Process each pattern
+  for (const { pattern, format, priority } of datePatterns) {
+    const matches = [...text.matchAll(pattern)];
+    console.log(`Pattern ${format}: found ${matches.length} matches`);
+    
+    for (const match of matches) {
       try {
-        let dateStr = match[0];
-        let parsedDate;
+        let dateStr = match[0].trim();
+        let parsedDate = null;
+        let confidence = 0;
         
-        console.log(`Found potential date: "${dateStr}" (format: ${format})`);
+        console.log(`Processing match: "${dateStr}" (format: ${format})`);
         
-        // Handle different date formats
-        if (format === 'US' || format === 'US_DOT') {
-          // MM/DD/YYYY format
-          parsedDate = new Date(dateStr.replace(/\./g, '/'));
-        } else if (format === 'EU') {
-          // DD/MM/YYYY - need to swap day and month
-          const parts = dateStr.split(/[\/-]/);
-          if (parts.length === 3) {
-            parsedDate = new Date(`${parts[1]}/${parts[0]}/${parts[2]}`);
+        // Parse different formats
+        if (format.includes('Month')) {
+          // Month name format
+          const monthMatch = dateStr.match(/(\w+)\s+(\d{1,2}),?\s+(\d{2,4})/i) || 
+                            dateStr.match(/(\d{1,2})\s+(\w+)\s+(\d{2,4})/i);
+          if (monthMatch) {
+            let month, day, year;
+            if (format === 'Month DD, YYYY') {
+              [, month, day, year] = monthMatch;
+            } else {
+              [, day, month, year] = monthMatch;
+            }
+            
+            const monthNum = monthNames[month.toLowerCase()];
+            if (monthNum) {
+              if (year.length === 2) year = '20' + year;
+              parsedDate = `${year}-${monthNum}-${day.padStart(2, '0')}`;
+              confidence = 0.9;
+            }
           }
-        } else if (format === 'ISO' || format === 'YEAR_FIRST') {
-          parsedDate = new Date(dateStr);
         } else {
-          // Month name formats
-          parsedDate = new Date(dateStr);
-        }
-        
-        if (parsedDate && !isNaN(parsedDate.getTime())) {
-          // Validate date is reasonable (not too far in past/future)
-          const now = new Date();
-          const yearsDiff = Math.abs(now.getFullYear() - parsedDate.getFullYear());
-          
-          if (yearsDiff <= 10) { // Within 10 years
-            const isoDate = parsedDate.toISOString().split('T')[0];
-            foundDates.push({ date: isoDate, confidence: getDateConfidence(dateStr, format) });
-            console.log(`Valid date found: ${isoDate} (confidence: ${getDateConfidence(dateStr, format)})`);
+          // Numeric formats
+          const nums = dateStr.match(/\d+/g);
+          if (nums && nums.length >= 3) {
+            let month, day, year;
+            
+            if (format === 'YYYY-MM-DD') {
+              [year, month, day] = nums;
+            } else if (format === 'DD/MM/YYYY') {
+              [day, month, year] = nums;
+            } else {
+              // Default to MM/DD/YYYY
+              [month, day, year] = nums;
+            }
+            
+            if (year.length === 2) year = '20' + year;
+            
+            // Validate date components
+            const m = parseInt(month);
+            const d = parseInt(day);
+            const y = parseInt(year);
+            
+            if (m >= 1 && m <= 12 && d >= 1 && d <= 31 && y >= 2020 && y <= 2030) {
+              parsedDate = `${y}-${m.toString().padStart(2, '0')}-${d.toString().padStart(2, '0')}`;
+              confidence = getDateConfidence(dateStr, format);
+            }
           }
         }
-      } catch (e) {
-        console.log(`Error parsing date "${match[0]}": ${e.message}`);
-        continue;
+        
+        if (parsedDate) {
+          const score = confidence * priority;
+          allMatches.push({ date: parsedDate, score, original: dateStr, format });
+          
+          if (score > bestScore) {
+            bestDate = parsedDate;
+            bestScore = score;
+            console.log(`New best date: ${parsedDate} (score: ${score}, format: ${format})`);
+          }
+        }
+        
+      } catch (error) {
+        console.log(`Error parsing date "${match[0]}": ${error.message}`);
       }
     }
   }
   
-  // Return the date with highest confidence
-  if (foundDates.length > 0) {
-    foundDates.sort((a, b) => b.confidence - a.confidence);
-    console.log(`Selected date: ${foundDates[0].date} (confidence: ${foundDates[0].confidence})`);
-    return foundDates[0].date;
-  }
-  
-  console.log('No valid date found');
-  return null;
+  console.log('All date matches:', allMatches);
+  console.log(`=== DATE EXTRACTION RESULT: ${bestDate} (score: ${bestScore}) ===`);
+  return bestDate;
 }
 
 // Helper function to determine date confidence

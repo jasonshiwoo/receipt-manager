@@ -44,7 +44,21 @@ export default function ReceiptUpload() {
         // Apply image enhancements
         const imageData = ctx.getImageData(0, 0, width, height);
         const enhancedData = enhanceImageForOCR(imageData);
-        ctx.putImageData(enhancedData, 0, 0);
+        
+        // Apply deskewing if needed
+        const skewAngle = detectSkew(enhancedData);
+        if (Math.abs(skewAngle) > 0.5) { // Only deskew if angle is significant
+          console.log(`Detected skew angle: ${skewAngle.toFixed(2)}°, applying correction...`);
+          ctx.clearRect(0, 0, width, height);
+          ctx.save();
+          ctx.translate(width / 2, height / 2);
+          ctx.rotate(-skewAngle * Math.PI / 180);
+          ctx.translate(-width / 2, -height / 2);
+          ctx.putImageData(enhancedData, 0, 0);
+          ctx.restore();
+        } else {
+          ctx.putImageData(enhancedData, 0, 0);
+        }
         
         // Convert back to blob
         canvas.toBlob((blob) => {
@@ -121,6 +135,64 @@ export default function ReceiptUpload() {
     }
     
     return new ImageData(newData, width, height);
+  };
+  
+  // Simple skew detection using horizontal line analysis
+  const detectSkew = (imageData) => {
+    const data = imageData.data;
+    const width = imageData.width;
+    const height = imageData.height;
+    
+    // Sample horizontal lines to detect skew
+    const sampleLines = [];
+    const stepY = Math.max(1, Math.floor(height / 20)); // Sample 20 lines
+    
+    for (let y = height * 0.2; y < height * 0.8; y += stepY) {
+      const linePixels = [];
+      for (let x = 0; x < width; x++) {
+        const idx = (Math.floor(y) * width + x) * 4;
+        const gray = data[idx]; // Already grayscale from enhancement
+        linePixels.push(gray < 128 ? 1 : 0); // Binary: text vs background
+      }
+      sampleLines.push(linePixels);
+    }
+    
+    // Test different angles (-10 to +10 degrees)
+    let bestAngle = 0;
+    let bestScore = 0;
+    
+    for (let angle = -10; angle <= 10; angle += 0.5) {
+      let score = 0;
+      const radians = angle * Math.PI / 180;
+      
+      for (const line of sampleLines) {
+        // Count horizontal runs of text pixels
+        let runs = 0;
+        let inRun = false;
+        
+        for (let x = 0; x < line.length; x++) {
+          const skewedX = Math.round(x + Math.tan(radians) * 10); // Simple skew simulation
+          const pixel = line[Math.max(0, Math.min(line.length - 1, skewedX))];
+          
+          if (pixel === 1 && !inRun) {
+            runs++;
+            inRun = true;
+          } else if (pixel === 0) {
+            inRun = false;
+          }
+        }
+        
+        // Prefer angles that create fewer, longer runs (better aligned text)
+        score += Math.max(0, 10 - runs);
+      }
+      
+      if (score > bestScore) {
+        bestScore = score;
+        bestAngle = angle;
+      }
+    }
+    
+    return bestAngle;
   };
 
   // Handle file selection with preprocessing
