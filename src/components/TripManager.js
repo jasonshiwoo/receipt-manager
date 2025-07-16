@@ -4,7 +4,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '../firebase';
 import './TripManager.css';
 
-const TripManager = () => {
+const TripManager = ({ onViewTripDetails, editingTrip, onEditTrip }) => {
   const [user] = useAuthState(auth);
   const [trips, setTrips] = useState([]);
   const [receipts, setReceipts] = useState([]);
@@ -12,7 +12,6 @@ const TripManager = () => {
   const [error, setError] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
-  const [editingTrip, setEditingTrip] = useState(null);
   const [selectedTrip, setSelectedTrip] = useState(null);
   
   const [newTrip, setNewTrip] = useState({
@@ -112,6 +111,19 @@ const TripManager = () => {
     return () => clearTimeout(timeoutId);
   }, [trips, receipts, user]);
 
+  // Handle editingTrip prop changes
+  useEffect(() => {
+    if (editingTrip) {
+      setEditTrip({
+        name: editingTrip.name,
+        startDate: editingTrip.startDate?.toDate ? editingTrip.startDate.toDate().toISOString().split('T')[0] : new Date(editingTrip.startDate).toISOString().split('T')[0],
+        endDate: editingTrip.endDate?.toDate ? editingTrip.endDate.toDate().toISOString().split('T')[0] : new Date(editingTrip.endDate).toISOString().split('T')[0],
+        location: editingTrip.location || ''
+      });
+      setShowEditForm(true);
+    }
+  }, [editingTrip]);
+
   const handleCreateTrip = async (e) => {
     e.preventDefault();
     if (!newTrip.name || !newTrip.startDate || !newTrip.endDate) {
@@ -160,7 +172,7 @@ const TripManager = () => {
   };
 
   const handleEditTrip = (trip) => {
-    setEditingTrip(trip);
+    onEditTrip(trip);
     setEditTrip({
       name: trip.name,
       startDate: trip.startDate?.toDate ? trip.startDate.toDate().toISOString().split('T')[0] : new Date(trip.startDate).toISOString().split('T')[0],
@@ -203,7 +215,7 @@ const TripManager = () => {
       await updateDoc(doc(db, `users/${user.uid}/trips`, editingTrip.id), tripData);
 
       setEditTrip({ name: '', startDate: '', endDate: '', location: '' });
-      setEditingTrip(null);
+      onEditTrip(null);
       setShowEditForm(false);
       
       // Trigger auto-assignment for the updated trip
@@ -218,7 +230,7 @@ const TripManager = () => {
 
   const handleCancelEdit = () => {
     setEditTrip({ name: '', startDate: '', endDate: '', location: '' });
-    setEditingTrip(null);
+    onEditTrip(null);
     setShowEditForm(false);
   };
 
@@ -273,6 +285,11 @@ const TripManager = () => {
     // Handle regular Date objects or date strings
     const date = new Date(dateValue);
     return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString();
+  };
+
+  // Handle opening trip details
+  const handleViewTripDetails = (trip) => {
+    onViewTripDetails(trip.id);
   };
 
   if (!user) {
@@ -479,6 +496,8 @@ const TripManager = () => {
         </div>
       )}
 
+
+
       <div className="trips-section">
         <h3>📋 Your Trips ({trips.length})</h3>
         
@@ -542,6 +561,12 @@ const TripManager = () => {
                   
                   <div className="trip-actions">
                     <button 
+                      onClick={() => handleViewTripDetails(trip)}
+                      className="btn-view-details"
+                    >
+                      📊 View Details
+                    </button>
+                    <button 
                       onClick={() => handleEditTrip(trip)}
                       className="btn-edit"
                     >
@@ -551,7 +576,7 @@ const TripManager = () => {
                       onClick={() => setSelectedTrip(selectedTrip === trip.id ? null : trip.id)}
                       className="btn-manage"
                     >
-                      {selectedTrip === trip.id ? 'Hide Details' : 'Manage Receipts'}
+                      {selectedTrip === trip.id ? 'Hide' : 'Quick Assign'}
                     </button>
                   </div>
                   

@@ -1,3 +1,6 @@
+/* Import global color palette */
+@import './styles/colors.css';
+
 .App {
   margin: 0;
   padding: 0;
@@ -6,6 +9,9 @@
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  min-height: 100vh;
 }
 
 * {
@@ -15,4 +21,25 @@
 body {
   margin: 0;
   padding: 0;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+/* Force light mode appearance even in dark mode */
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: var(--color-bg-primary) !important;
+    color: var(--color-text-primary) !important;
+  }
+  
+  .App {
+    background-color: var(--color-bg-primary) !important;
+    color: var(--color-text-primary) !important;
+  }
+  
+  /* Override any browser default dark mode styles */
+  html {
+    background-color: var(--color-bg-primary) !important;
+    color: var(--color-text-primary) !important;
+  }
 }

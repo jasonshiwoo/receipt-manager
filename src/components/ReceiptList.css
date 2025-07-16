@@ -1,9 +1,10 @@
 .receipt-list {
-  background: white;
+  background: var(--color-bg-secondary);
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px var(--shadow-medium);
   margin-bottom: 24px;
+  border: 1px solid var(--color-border-light);
 }
 
 .receipt-list-header {
@@ -18,9 +19,9 @@
 }
 
 .receipt-list-header.clickable-header:hover {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  background: var(--gradient-secondary);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 4px 12px var(--shadow-medium);
 }
 
 .receipt-list-header.clickable-header:active {
@@ -29,7 +30,7 @@
 
 .receipt-list-header h3 {
   margin: 0 0 8px 0;
-  color: #1f2937;
+  color: var(--color-text-primary);
   font-size: 20px;
   font-weight: 600;
   display: flex;
@@ -39,13 +40,39 @@
 
 .receipt-list-header p {
   margin: 0;
-  color: #6b7280;
+  color: var(--color-text-secondary);
   font-size: 14px;
 }
 
 .header-content {
   display: flex;
   flex-direction: column;
+}
+
+.view-all-receipts-btn {
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 16px;
+  align-self: flex-start;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.view-all-receipts-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.view-all-receipts-btn:active {
+  transform: translateY(0);
 }
 
 .error-message {
@@ -80,24 +107,24 @@
 }
 
 .receipt-card {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border-light);
   border-radius: 8px;
   overflow: hidden;
   transition: all 0.3s ease;
-  background: white;
+  background: var(--color-bg-secondary);
 }
 
 .receipt-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
-  border-color: #3b82f6;
+  box-shadow: 0 8px 25px var(--shadow-medium);
+  border-color: var(--color-primary);
 }
 
 .receipt-image {
   width: 100%;
   height: 200px;
   overflow: hidden;
-  background: #f9fafb;
+  background: var(--color-bg-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -122,7 +149,7 @@
   margin: 0 0 12px 0;
   font-size: 16px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--color-text-primary);
   word-break: break-word;
 }
 
@@ -210,9 +237,9 @@
 .edit-btn {
   flex: 1;
   padding: 8px 12px;
-  background: #dbeafe;
-  color: #1d4ed8;
-  border: 1px solid #bfdbfe;
+  background: var(--color-secondary-light);
+  color: var(--color-primary);
+  border: 1px solid var(--color-secondary);
   border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
@@ -225,16 +252,16 @@
 }
 
 .edit-btn:hover {
-  background: #bfdbfe;
-  border-color: #93c5fd;
+  background: var(--color-secondary);
+  border-color: var(--color-secondary-hover);
 }
 
 .delete-btn {
   flex: 1;
   padding: 8px 12px;
-  background: #fee2e2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
+  background: var(--color-wood-light);
+  color: var(--color-accent);
+  border: 1px solid var(--color-wood);
   border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
@@ -247,8 +274,8 @@
 }
 
 .delete-btn:hover:not(:disabled) {
-  background: #fecaca;
-  border-color: #f87171;
+  background: var(--color-wood);
+  border-color: var(--color-accent-hover);
 }
 
 .delete-btn:disabled {
@@ -281,8 +308,8 @@
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
-  background: #10b981;
-  color: white;
+  background: var(--color-success);
+  color: var(--color-text-white);
   border-radius: 12px;
   font-size: 11px;
   font-weight: 600;
@@ -468,6 +495,30 @@
 .form-group textarea {
   resize: vertical;
   min-height: 80px;
+}
+
+/* Receipt Image Preview in Edit Modal */
+.receipt-image-preview {
+  margin-bottom: 24px;
+}
+
+.receipt-image-preview .image-container {
+  border: 2px solid var(--color-border-light);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-bg-secondary);
+  box-shadow: 0 4px 12px var(--shadow-light);
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.receipt-preview-image {
+  width: 100%;
+  height: auto;
+  max-height: 300px;
+  object-fit: contain;
+  display: block;
+  background: var(--color-bg-primary);
 }
 
 .modal-footer {

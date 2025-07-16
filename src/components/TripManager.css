@@ -8,25 +8,25 @@
   text-align: center;
   margin-bottom: 40px;
   padding-bottom: 20px;
-  border-bottom: 2px solid #f0f0f0;
+  border-bottom: 2px solid var(--color-border-light);
 }
 
 .manager-header h2 {
-  color: #2c3e50;
+  color: var(--color-text-primary);
   margin: 0 0 10px 0;
   font-size: 2rem;
   font-weight: 600;
 }
 
 .manager-header p {
-  color: #7f8c8d;
+  color: var(--color-text-secondary);
   margin: 0 0 20px 0;
   font-size: 1.1rem;
 }
 
 .create-trip-btn {
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-  color: white;
+  background: var(--gradient-accent);
+  color: var(--color-text-white);
   border: none;
   border-radius: 8px;
   padding: 12px 24px;
@@ -34,7 +34,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+  box-shadow: 0 4px 15px var(--shadow-medium);
 }
 
 .create-trip-btn:hover {
@@ -45,9 +45,9 @@
 .auth-required {
   text-align: center;
   padding: 60px 20px;
-  background: #f8f9fa;
+  background: var(--color-bg-subtle);
   border-radius: 12px;
-  border: 2px dashed #dee2e6;
+  border: 2px dashed var(--color-border);
 }
 
 .auth-required h3 {
@@ -347,8 +347,8 @@
 }
 
 .btn-manage {
-  background: #3498db;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-text-white);
   border: none;
   border-radius: 6px;
   padding: 10px 20px;
@@ -359,13 +359,13 @@
 }
 
 .btn-manage:hover {
-  background: #2980b9;
+  background: var(--color-primary-hover);
   transform: translateY(-1px);
 }
 
 .btn-edit {
-  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-  color: white;
+  background: var(--gradient-secondary);
+  color: var(--color-text-primary);
   border: none;
   border-radius: 6px;
   padding: 10px 20px;
@@ -373,13 +373,13 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(243, 156, 18, 0.3);
+  box-shadow: 0 2px 8px var(--shadow-medium);
 }
 
 .btn-edit:hover {
-  background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+  background: var(--color-secondary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(243, 156, 18, 0.4);
+  box-shadow: 0 4px 12px var(--shadow-dark);
 }
 
 .btn-update {
@@ -555,5 +555,415 @@
   
   .btn-assign {
     align-self: flex-end;
+  }
+}
+
+/* Trip Details Modal Styles */
+.trip-details-modal {
+  background: var(--color-bg-secondary);
+  border-radius: 16px;
+  max-width: 900px;
+  width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px var(--shadow-dark);
+  border: 1px solid var(--color-border-light);
+}
+
+.trip-details-content {
+  padding: 0 24px 24px 24px;
+}
+
+/* Trip Info Section */
+.trip-info-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  padding: 20px;
+  background: var(--color-bg-subtle);
+  border-radius: 12px;
+  border: 1px solid var(--color-border-light);
+}
+
+.trip-basic-info {
+  flex: 1;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px 0;
+}
+
+.info-label {
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  min-width: 140px;
+}
+
+.info-value {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.total-amount {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.trip-actions-detailed {
+  margin-left: 20px;
+}
+
+.btn-edit-detailed {
+  background: var(--gradient-secondary);
+  color: var(--color-text-primary);
+  border: none;
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px var(--shadow-light);
+}
+
+.btn-edit-detailed:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--shadow-medium);
+  background: var(--color-secondary-hover);
+}
+
+/* View Details Button */
+.btn-view-details {
+  background: var(--gradient-primary);
+  color: var(--color-text-white);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px var(--shadow-light);
+}
+
+.btn-view-details:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px var(--shadow-medium);
+}
+
+/* Expense Breakdown Section */
+.expense-breakdown-section {
+  margin-bottom: 32px;
+}
+
+.expense-breakdown-section h3 {
+  color: var(--color-text-primary);
+  margin-bottom: 16px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  border-bottom: 2px solid var(--color-border-light);
+  padding-bottom: 8px;
+}
+
+.category-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.category-item {
+  background: var(--color-bg-primary);
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid var(--color-border-light);
+  transition: all 0.3s ease;
+}
+
+.category-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow-light);
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.category-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: 1.1rem;
+}
+
+.category-amount {
+  font-weight: 700;
+  color: var(--color-primary);
+  font-size: 1.1rem;
+}
+
+.category-bar {
+  height: 8px;
+  background: var(--color-bg-subtle);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.category-fill {
+  height: 100%;
+  background: var(--gradient-accent);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+/* Trip Receipts Section */
+.trip-receipts-section {
+  margin-bottom: 32px;
+}
+
+.trip-receipts-section h3 {
+  color: var(--color-text-primary);
+  margin-bottom: 16px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  border-bottom: 2px solid var(--color-border-light);
+  padding-bottom: 8px;
+}
+
+.detailed-receipts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detailed-receipt-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-bg-primary);
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid var(--color-border-light);
+  transition: all 0.3s ease;
+}
+
+.detailed-receipt-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px var(--shadow-light);
+}
+
+.receipt-main-info {
+  flex: 1;
+}
+
+.receipt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.receipt-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  font-size: 1.1rem;
+}
+
+.receipt-amount {
+  font-weight: 700;
+  color: var(--color-primary);
+  font-size: 1.1rem;
+}
+
+.receipt-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.receipt-date,
+.receipt-category,
+.receipt-location {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-subtle);
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border-light);
+}
+
+.receipt-actions {
+  margin-left: 16px;
+}
+
+.btn-remove-receipt {
+  background: var(--color-accent);
+  color: var(--color-text-white);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-remove-receipt:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+.btn-remove-receipt:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Add Receipts Section */
+.add-receipts-section h3 {
+  color: var(--color-text-primary);
+  margin-bottom: 16px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  border-bottom: 2px solid var(--color-border-light);
+  padding-bottom: 8px;
+}
+
+.unassigned-receipts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.unassigned-receipt-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-bg-subtle);
+  border-radius: 10px;
+  padding: 16px;
+  border: 2px dashed var(--color-border);
+  transition: all 0.3s ease;
+}
+
+.unassigned-receipt-item:hover {
+  border-color: var(--color-primary);
+  background: var(--color-bg-primary);
+  transform: translateY(-1px);
+}
+
+.receipt-info {
+  flex: 1;
+}
+
+.receipt-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+  font-size: 1.1rem;
+}
+
+.receipt-details {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.btn-add-receipt {
+  background: var(--gradient-primary);
+  color: var(--color-text-white);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 3px 10px var(--shadow-light);
+}
+
+.btn-add-receipt:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px var(--shadow-medium);
+}
+
+.btn-add-receipt:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Empty States */
+.no-expenses,
+.no-receipts,
+.no-unassigned {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-style: italic;
+  padding: 32px;
+  background: var(--color-bg-subtle);
+  border-radius: 10px;
+  border: 2px dashed var(--color-border);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .trip-details-modal {
+    width: 95vw;
+    max-height: 95vh;
+  }
+  
+  .trip-info-section {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .trip-actions-detailed {
+    margin-left: 0;
+    align-self: stretch;
+  }
+  
+  .btn-edit-detailed {
+    width: 100%;
+  }
+  
+  .category-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .receipt-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .receipt-meta {
+    gap: 8px;
+  }
+  
+  .detailed-receipt-item,
+  .unassigned-receipt-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .receipt-actions {
+    margin-left: 0;
+    align-self: stretch;
+  }
+  
+  .btn-remove-receipt,
+  .btn-add-receipt {
+    width: 100%;
   }
 }

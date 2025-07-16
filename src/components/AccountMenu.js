@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 import './AccountMenu.css';
 
 export default function AccountMenu() {
@@ -66,25 +68,76 @@ function AccountDetailsModal({ onClose }) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
   const [message, setMessage] = useState('');
+
+  // Load existing user profile data
+  useEffect(() => {
+    async function loadUserProfile() {
+      if (!currentUser) return;
+      
+      try {
+        const userDocRef = doc(db, `users/${currentUser.uid}/profile`, 'details');
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          const data = userDoc.data();
+          setFullName(data.fullName || '');
+          setBusinessName(data.businessName || '');
+          // Email comes from auth, don't override
+        }
+      } catch (error) {
+        console.error('Error loading user profile:', error);
+      } finally {
+        setLoadingProfile(false);
+      }
+    }
+    
+    loadUserProfile();
+  }, [currentUser]);
 
   async function handleSave() {
     setLoading(true);
     setMessage('');
     
     try {
-      // Here you would implement the actual save functionality
-      // For now, we'll just show a success message
+      if (!currentUser) {
+        throw new Error('No user logged in');
+      }
+
+      // Save user profile data to Firestore
+      const userDocRef = doc(db, `users/${currentUser.uid}/profile`, 'details');
+      const profileData = {
+        fullName: fullName.trim(),
+        businessName: businessName.trim(),
+        updatedAt: new Date().toISOString()
+      };
+
+      // Check if document exists
+      const userDoc = await getDoc(userDocRef);
+      
+      if (userDoc.exists()) {
+        // Update existing document
+        await updateDoc(userDocRef, profileData);
+      } else {
+        // Create new document
+        await setDoc(userDocRef, {
+          ...profileData,
+          createdAt: new Date().toISOString()
+        });
+      }
+      
       setMessage('Account details saved successfully!');
       
-      // In a real implementation, you would:
-      // 1. Update user profile in Firestore
-      // 2. Update email if changed (requires re-authentication)
-      // 3. Update password if provided (requires current password)
+      // Note: Email and password updates would require additional authentication
+      // and are more complex to implement safely
+      if (email !== currentUser.email) {
+        setMessage('Account details saved! Note: Email changes require additional verification.');
+      }
       
     } catch (error) {
-      setMessage('Failed to save account details');
-      console.error(error);
+      setMessage('Failed to save account details: ' + error.message);
+      console.error('Error saving profile:', error);
     }
     
     setLoading(false);
@@ -105,6 +158,12 @@ function AccountDetailsModal({ onClose }) {
             </div>
           )}
           
+          {loadingProfile ? (
+            <div className="loading-profile">
+              <p>Loading your profile...</p>
+            </div>
+          ) : (
+            <>
           <div className="form-group">
             <label htmlFor="fullName">Full Name</label>
             <input
@@ -159,6 +218,8 @@ function AccountDetailsModal({ onClose }) {
               placeholder="Enter new password (leave blank to keep current)"
             />
           </div>
+            </>
+          )}
         </div>
         
         <div className="modal-footer">

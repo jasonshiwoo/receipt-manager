@@ -1,25 +1,28 @@
+@import '../styles/colors.css';
+
 .login-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #3b82f6 0%, #dc2626 100%);
+  background: var(--color-bg-primary);
   padding: 20px;
 }
 
 .login-card {
-  background: white;
+  background: var(--color-bg-secondary);
   padding: 2rem;
-  border-radius: 10px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 10px 25px var(--shadow-medium);
   width: 100%;
   max-width: 400px;
+  border: 1px solid var(--color-border-light);
 }
 
 .login-card h2 {
   text-align: center;
   margin-bottom: 1.5rem;
-  color: #333;
+  color: var(--color-text-primary);
   font-size: 1.8rem;
 }
 
@@ -30,42 +33,47 @@
 .form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #555;
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
 .form-group input {
   width: 100%;
   padding: 0.75rem;
-  border: 2px solid #e1e5e9;
-  border-radius: 5px;
+  border: 2px solid var(--color-border-light);
+  border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.3s ease;
   box-sizing: border-box;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #3b82f6;
+  border-color: var(--color-primary);
+  background: var(--color-bg-secondary);
 }
 
 .submit-btn {
   width: 100%;
-  background: linear-gradient(135deg, #3b82f6 0%, #dc2626 100%);
-  color: white;
+  background: var(--gradient-secondary);
+  color: var(--color-text-primary);
   border: none;
   padding: 12px;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
   margin-bottom: 20px;
+  box-shadow: 0 4px 12px var(--shadow-light);
 }
 
 .submit-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 16px var(--shadow-medium);
+  background: var(--color-secondary-hover);
 }
 
 .submit-btn:disabled {
@@ -81,22 +89,23 @@
 .toggle-btn {
   background: none;
   border: none;
-  color: #667eea;
+  color: var(--color-primary);
   cursor: pointer;
   text-decoration: underline;
   font-size: 0.9rem;
+  transition: color 0.3s ease;
 }
 
 .toggle-btn:hover {
-  color: #764ba2;
+  color: var(--color-primary-hover);
 }
 
 .error-message {
-  background: #fee;
-  color: #c33;
+  background: var(--color-bg-soft);
+  color: var(--color-accent);
   padding: 0.75rem;
-  border-radius: 5px;
+  border-radius: 8px;
   margin-bottom: 1rem;
   text-align: center;
-  border: 1px solid #fcc;
+  border: 1px solid var(--color-border-medium);
 }
