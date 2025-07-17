@@ -502,54 +502,75 @@ export default function ReceiptsPage({ onBack }) {
         <div className="receipt-grid">
           {filteredReceipts.map((receipt) => (
             <div key={receipt.id} className="receipt-card" onClick={() => handleEditReceipt(receipt)}>
-              <div className="receipt-image">
-                <img 
-                  src={receipt.storageUrl} 
-                  alt={receipt.originalName}
-                  loading="lazy"
-                />
+              {/* Receipt Image */}
+              <div className="receipt-image-container">
+                {receipt.storageUrl ? (
+                  <img 
+                    src={receipt.storageUrl} 
+                    alt={receipt.originalName || 'Receipt'}
+                    className="receipt-image"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div className="receipt-placeholder" style={{ display: receipt.storageUrl ? 'none' : 'flex' }}>
+                  <span>📄</span>
+                  <p>No Image</p>
+                </div>
               </div>
-              <div className="receipt-info">
-                <h4 className="receipt-name">{receipt.originalName}</h4>
-                <div className="receipt-details">
-                  <span className="receipt-size">{formatFileSize(receipt.size)}</span>
-                  <span className="receipt-date">{formatDate(receipt.uploadedAt)}</span>
+              
+              {/* Receipt Info */}
+              <div className="receipt-info-section">
+                <div className="receipt-header">
+                  <h3 className="receipt-name">{receipt.originalName || 'Receipt'}</h3>
+                  <span className="receipt-amount">
+                    ${(typeof receipt.total === 'number' ? receipt.total : 0).toFixed(2)}
+                  </span>
                 </div>
                 
-                {/* Display OCR data if available */}
-                {(receipt.total || receipt.date || receipt.category || receipt.description) && (
-                  <div className="receipt-ocr-data">
-                    <div className="ocr-header">
-                      <span className="ocr-badge">✅ Processed</span>
-                    </div>
-                    <div className="ocr-details">
-                      {receipt.total && <div><strong>Total:</strong> ${receipt.total}</div>}
-                      {receipt.date && <div><strong>Date:</strong> {receipt.date}</div>}
-                      {receipt.category && <div><strong>Category:</strong> {receipt.category}</div>}
-                      {receipt.description && <div><strong>Description:</strong> {receipt.description}</div>}
-                    </div>
-                  </div>
-                )}
+                <div className="receipt-meta">
+                  <span className="receipt-date">
+                    📅 {new Date(receipt.date || receipt.uploadedAt).toLocaleDateString()}
+                  </span>
+                  {receipt.category && (
+                    <span className="receipt-category">
+                      🏷️ {receipt.category}
+                    </span>
+                  )}
+                  {receipt.description && (
+                    <span className="receipt-description">
+                      📝 {receipt.description}
+                    </span>
+                  )}
+                  <span className="receipt-size">
+                    📁 {formatFileSize(receipt.size)}
+                  </span>
+                </div>
                 
                 <div className="receipt-actions">
                   <button 
-                    className="edit-btn"
+                    className="btn-edit-receipt"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleEditReceipt(receipt);
                     }}
+                    title="Edit receipt"
                   >
-                    Edit
+                    ✏️ Edit
                   </button>
                   <button 
-                    className="delete-btn"
+                    className="btn-delete-receipt"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDeleteReceipt(receipt.id);
                     }}
                     disabled={deletingIds.has(receipt.id)}
+                    title="Delete receipt"
                   >
-                    {deletingIds.has(receipt.id) ? 'Deleting...' : 'Delete'}
+                    {deletingIds.has(receipt.id) ? '⏳ Deleting...' : '🗑️ Delete'}
                   </button>
                 </div>
               </div>

@@ -567,12 +567,6 @@ const TripManager = ({ onViewTripDetails, editingTrip, onEditTrip }) => {
                       📊 View Details
                     </button>
                     <button 
-                      onClick={() => handleEditTrip(trip)}
-                      className="btn-edit"
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button 
                       onClick={() => setSelectedTrip(selectedTrip === trip.id ? null : trip.id)}
                       className="btn-manage"
                     >

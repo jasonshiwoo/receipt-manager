@@ -116,125 +116,151 @@
 }
 
 .receipt-card {
-  background: white;
+  background: var(--color-bg-subtle);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-light);
+  border: 1px solid var(--color-border-light);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .receipt-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-medium);
+}
+
+/* Receipt Image Container */
+.receipt-image-container {
+  position: relative;
+  height: 200px;
+  background: var(--color-bg-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
 
 .receipt-image {
-  height: 200px;
-  overflow: hidden;
-  background: var(--color-bg-secondary);
-}
-
-.receipt-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.2s ease;
 }
 
-.receipt-info {
-  padding: 16px;
+.receipt-image:hover {
+  transform: scale(1.02);
+}
+
+.receipt-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+}
+
+.receipt-placeholder span {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.5;
+}
+
+/* Receipt Info Section */
+.receipt-info-section {
+  padding: 1.5rem;
+}
+
+.receipt-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 1rem;
 }
 
 .receipt-name {
-  margin: 0 0 8px 0;
-  font-size: 16px;
+  margin: 0;
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--color-text-primary);
+  line-height: 1.3;
+  flex: 1;
   word-break: break-word;
 }
 
-.receipt-details {
+.receipt-amount {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  white-space: nowrap;
+}
+
+.receipt-meta {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  font-size: 12px;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.receipt-date,
+.receipt-category,
+.receipt-description,
+.receipt-size {
+  font-size: 0.85rem;
   color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.receipt-ocr-data {
-  margin: 12px 0;
-  padding: 12px;
-  background: var(--color-bg-secondary);
-  border-radius: 8px;
-  border-left: 4px solid var(--color-success);
-}
-
-.ocr-header {
-  margin-bottom: 8px;
-}
-
-.ocr-badge {
-  background: var(--color-success);
-  color: white;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.ocr-details {
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.ocr-details div {
-  margin-bottom: 4px;
-}
-
-.ocr-details strong {
-  color: var(--color-text-primary);
-}
-
+/* Receipt Actions */
 .receipt-actions {
   display: flex;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 0.75rem;
 }
 
-.edit-btn,
-.delete-btn {
-  flex: 1;
-  padding: 8px 12px;
+.btn-edit-receipt {
+  background: var(--gradient-primary);
+  color: white;
   border: none;
+  padding: 0.6rem 1rem;
   border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
   cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
   transition: all 0.2s ease;
+  flex: 1;
 }
 
-.edit-btn {
-  background: var(--color-primary);
+.btn-edit-receipt:hover {
+  background: var(--gradient-secondary);
+  transform: translateY(-1px);
+}
+
+.btn-delete-receipt {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a52);
   color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  flex: 1;
 }
 
-.edit-btn:hover {
-  background: var(--color-primary-dark);
+.btn-delete-receipt:hover {
+  background: linear-gradient(135deg, #ff5252, #e53935);
+  transform: translateY(-1px);
 }
 
-.delete-btn {
-  background: var(--color-danger);
-  color: white;
-}
-
-.delete-btn:hover {
-  background: var(--color-danger-dark);
-}
-
-.delete-btn:disabled {
+.btn-delete-receipt:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
 }
 
 /* No Receipts State */

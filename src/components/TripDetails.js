@@ -10,6 +10,7 @@ const TripDetails = ({ tripId, onBack, onEditTrip }) => {
   const [receipts, setReceipts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showAddReceipts, setShowAddReceipts] = useState(false);
 
   useEffect(() => {
     if (!user || !tripId) return;
@@ -298,65 +299,75 @@ const TripDetails = ({ tripId, onBack, onEditTrip }) => {
 
         {/* Add Receipts Section */}
         <div className="add-receipts-section">
-          <h2>➕ Add Receipts to Trip</h2>
-          {getUnassignedReceipts().length === 0 ? (
-            <p className="no-unassigned">All receipts are already assigned to trips</p>
-          ) : (
-            <div className="unassigned-receipts-grid">
-              {getUnassignedReceipts()
-                .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
-                .map(receipt => (
-                <div key={receipt.id} className="unassigned-receipt-card">
-                  {/* Receipt Image */}
-                  <div className="receipt-image-container">
-                    {receipt.storageUrl ? (
-                      <img 
-                        src={receipt.storageUrl} 
-                        alt={receipt.originalName || 'Receipt'} 
-                        className="receipt-image"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.nextSibling.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    <div className="receipt-placeholder" style={{ display: receipt.storageUrl ? 'none' : 'flex' }}>
-                      <span>📄</span>
-                      <p>No Image</p>
+          <h2 
+            className="collapsible-header"
+            onClick={() => setShowAddReceipts(!showAddReceipts)}
+          >
+            {showAddReceipts ? '▼' : '▶'} Add Receipts to Trip ({getUnassignedReceipts().length} available)
+          </h2>
+          
+          {showAddReceipts && (
+            <>
+              {getUnassignedReceipts().length === 0 ? (
+                <p className="no-unassigned">All receipts are already assigned to trips</p>
+              ) : (
+                <div className="unassigned-receipts-grid">
+                  {getUnassignedReceipts()
+                    .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
+                    .map(receipt => (
+                    <div key={receipt.id} className="unassigned-receipt-card">
+                      {/* Receipt Image */}
+                      <div className="receipt-image-container">
+                        {receipt.storageUrl ? (
+                          <img 
+                            src={receipt.storageUrl} 
+                            alt={receipt.originalName || 'Receipt'} 
+                            className="receipt-image"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div className="receipt-placeholder" style={{ display: receipt.storageUrl ? 'none' : 'flex' }}>
+                          <span>📄</span>
+                          <p>No Image</p>
+                        </div>
+                      </div>
+                      
+                      {/* Receipt Info */}
+                      <div className="receipt-info-section">
+                        <div className="receipt-header">
+                          <h3 className="receipt-name">{receipt.originalName || 'Receipt'}</h3>
+                          <span className="receipt-amount">${(typeof receipt.total === 'number' ? receipt.total : 0).toFixed(2)}</span>
+                        </div>
+                        
+                        <div className="receipt-meta">
+                          <span className="receipt-date">
+                            📅 {new Date(receipt.date || receipt.createdAt).toLocaleDateString()}
+                          </span>
+                          {receipt.category && (
+                            <span className="receipt-category">
+                              🏷️ {receipt.category}
+                            </span>
+                          )}
+                        </div>
+                        
+                        <div className="receipt-actions">
+                          <button
+                            onClick={() => handleAssignReceipt(receipt.id, trip.name)}
+                            className="btn-add-receipt"
+                            disabled={loading}
+                          >
+                            ➕ Add to Trip
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                  
-                  {/* Receipt Info */}
-                  <div className="receipt-info-section">
-                    <div className="receipt-header">
-                      <h3 className="receipt-name">{receipt.originalName || 'Receipt'}</h3>
-                      <span className="receipt-amount">${(typeof receipt.total === 'number' ? receipt.total : 0).toFixed(2)}</span>
-                    </div>
-                    
-                    <div className="receipt-meta">
-                      <span className="receipt-date">
-                        📅 {new Date(receipt.date || receipt.createdAt).toLocaleDateString()}
-                      </span>
-                      {receipt.category && (
-                        <span className="receipt-category">
-                          🏷️ {receipt.category}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="receipt-actions">
-                      <button
-                        onClick={() => handleAssignReceipt(receipt.id, trip.name)}
-                        className="btn-add-receipt"
-                        disabled={loading}
-                      >
-                        ➕ Add to Trip
-                      </button>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           )}
         </div>
       </div>
